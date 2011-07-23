@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>ch.piratenpartei.pivote</groupId>
+  <artifactId>pivote-java</artifactId>
+  <packaging>jar</packaging>
+  <version>1.0-SNAPSHOT</version>
+
+  <name>${project.groupId}:${project.artifactId}</name>
+  <description></description>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <webstart.codebase>http://piraten.raffael.ch/pivote-java</webstart.codebase>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>ch.raffael.util</groupId>
+      <artifactId>cru-swing</artifactId>
+      <version>1105-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>ch.raffael.util</groupId>
+      <artifactId>cru-i18n</artifactId>
+      <version>1105-SNAPSHOT</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.jidesoft</groupId>
+      <artifactId>jide-oss</artifactId>
+      <version>2.10.0</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.jetbrains</groupId>
+      <artifactId>annotations</artifactId>
+      <version>10.5</version>
+      <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-jdk14</artifactId>
+      <version>1.6.1</version>
+      <scope>runtime</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+        <includes>
+          <include>**/*.properties</include>
+          <include>**/*.png</include>
+          <include>**/*.html</include>
+        </includes>
+        <excludes>
+          <exclude>ch/piratenpartei/pivote/PiVoteResources.properties</exclude>
+        </excludes>
+        <filtering>false</filtering>
+      </resource>
+      <resource>
+        <directory>src/main/resources</directory>
+        <includes>
+          <include>ch/piratenpartei/pivote/PiVoteResources.properties</include>
+        </includes>
+        <filtering>true</filtering>
+      </resource>
+    </resources>
+    <plugins>
+      <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>1.6</source>
+          <target>1.6</target>
+        </configuration>
+      </plugin>
+      <plugin>
+        <artifactId>maven-jar-plugin</artifactId>
+        <configuration>
+          <archive>
+            <manifest>
+              <addClasspath>true</addClasspath>
+              <classpathPrefix>lib/</classpathPrefix>
+              <mainClass>ch.piratenpartei.pivote.PiVote</mainClass>
+            </manifest>
+          </archive>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo.webstart</groupId>
+        <artifactId>webstart-maven-plugin</artifactId>
+        <configuration>
+          <jnlp>
+            <mainClass>ch.piratenpartei.pivote.PiVote</mainClass>
+          </jnlp>
+          <sign>
+            <keystore>pivote-keystore</keystore>
+            <keypass>pivotepass</keypass>
+            <storepass>pivotepass</storepass>
+            <alias>pivote</alias>
+
+            <dnameCn>Raffael Herzog</dnameCn>
+            <dnameOu>None</dnameOu>
+            <dnameO>Privat</dnameO>
+            <dnameL>Zuerich</dnameL>
+            <dnameSt>Zuerich</dnameSt>
+            <dnameC>CH</dnameC>
+
+            <verify>true</verify>
+
+            <keystoreConfig>
+              <delete>true</delete>
+              <gen>true</gen>
+            </keystoreConfig>
+          </sign>
+        </configuration>
+      </plugin>
+      <plugin>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <configuration>
+          <descriptors>
+            <descriptor>src/main/assembly/assembly.xml</descriptor>
+          </descriptors>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+  <repositories>
+    <repository>
+      <id>maven.raffael.ch</id>
+      <name>maven.raffael.ch</name>
+      <url>http://maven.raffael.ch</url>
+    </repository>
+  </repositories>
+
+</project>
