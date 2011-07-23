@@ -1,12 +1,11 @@
 package ch.piratenpartei.pivote.ui;
 
-import java.io.InputStream;
-
 import javax.swing.ImageIcon;
 
 import ch.piratenpartei.pivote.PiVoteResources;
 
 import ch.raffael.util.i18n.Default;
+import ch.raffael.util.i18n.Forward;
 
 
 /**
@@ -16,9 +15,6 @@ public interface Resources extends PiVoteResources {
 
     @Default("What is this?")
     String whatIsThis();
-
-    @Default("someHelp.html")
-    byte[] someHelp();
 
     @Default("Current Votings")
     String menuCurrentVotings();
@@ -31,5 +27,10 @@ public interface Resources extends PiVoteResources {
 
     @Default("Settings")
     String menuSettings();
+
+    @Default("Close")
+    String closeActivity();
+    @Forward(method = "cancelIcon")
+    ImageIcon closeActivityIcon();
 
 }

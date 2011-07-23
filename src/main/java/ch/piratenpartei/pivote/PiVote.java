@@ -9,11 +9,10 @@ import java.util.prefs.Preferences;
 import javax.swing.BorderFactory;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
-import javax.swing.text.html.parser.ContentModel;
 
 import org.slf4j.Logger;
 
-import ch.piratenpartei.pivote.ui.MainMenu;
+import ch.piratenpartei.pivote.ui.AppPanel;
 import com.jidesoft.dialog.JideOptionPane;
 import org.jetbrains.annotations.NotNull;
 
@@ -84,10 +83,10 @@ public final class PiVote {
         });
         JFrame mainFrame = new JFrame(res.appName());
         rootContext.attach(mainFrame);
-        MainMenu mainMenu = new MainMenu();
-        mainMenu.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-        mainFrame.setContentPane(mainMenu);
-        mainMenu.updateMessages();
+        AppPanel appPanel = new AppPanel();
+        appPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+        mainFrame.setContentPane(appPanel);
+        appPanel.updateMessages();
         mainFrame.pack();
         mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         mainFrame.setIconImage(res.piVoteLogo32().getImage());
