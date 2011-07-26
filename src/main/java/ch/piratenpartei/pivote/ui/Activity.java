@@ -25,7 +25,7 @@ public interface Activity {
 
     List<Action> getActions();
 
-    void activityOpenend(Navigator navigator, Context context);
+    void openActivity(Context context, Navigator navigator);
 
     boolean activityClosing();
     void activityClosed();

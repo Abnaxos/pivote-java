@@ -8,6 +8,8 @@ import java.util.List;
 
 import javax.swing.Action;
 
+import com.google.common.base.Preconditions;
+
 import ch.raffael.util.i18n.ResourceBundle;
 import ch.raffael.util.swing.context.Context;
 
@@ -50,19 +52,22 @@ public abstract class AbstractActivity<T extends Component> implements Activity 
 
     @Override
     public Component getComponent() {
-        return component();
+        Preconditions.checkState(component != null, "Activity not opened");
+        return component;
     }
 
     @Override
     public List<Action> getActions() {
-        component();
         return Collections.unmodifiableList(actions);
     }
 
     @Override
-    public void activityOpenend(Navigator navigator, Context context) {
+    public void openActivity(Context context, Navigator navigator) {
         this.navigator = navigator;
         this.context = context;
+        if ( component == null ) {
+            component = buildUi();
+        }
     }
 
     @Override
@@ -75,9 +80,6 @@ public abstract class AbstractActivity<T extends Component> implements Activity 
     }
 
     protected T component() {
-        if ( component == null ) {
-            component = buildUi();
-        }
         return component;
     }
 
@@ -98,5 +100,9 @@ public abstract class AbstractActivity<T extends Component> implements Activity 
     }
 
     protected abstract T buildUi();
+
+    protected void destroyUi() {
+        component = null;
+    }
 
 }

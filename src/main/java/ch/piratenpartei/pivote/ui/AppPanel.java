@@ -1,6 +1,7 @@
 package ch.piratenpartei.pivote.ui;
 
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dialog;
 import java.awt.FlowLayout;
@@ -26,6 +27,7 @@ import javax.swing.event.ChangeListener;
 import ch.piratenpartei.pivote.HelpResources;
 import ch.piratenpartei.pivote.PiVote;
 import ch.piratenpartei.pivote.ui.cert.CertificateBaseData;
+import ch.piratenpartei.pivote.ui.cert.CertificateManager;
 import com.google.common.base.Objects;
 import com.jidesoft.swing.JideButton;
 
@@ -100,7 +102,7 @@ public class AppPanel extends JPanel implements Activity.Navigator {
         menu.add(menuButton(new CommonAction(res, "menuManageCertificates") {
             @Override
             public void actionPerformed(ActionEvent e) {
-                open(activityPlaceholder("Manage Certificate", "Manage your certificates. Also contains a button for the new certificate wizard (for now, use the message on the main screen)"));
+                open(new CertificateManager());
             }
         }));
         menu.add(menuButton(new CommonAction(res, "menuSettings") {
@@ -156,7 +158,10 @@ public class AppPanel extends JPanel implements Activity.Navigator {
         else {
             Context actCtx = context(this).create();
             JPanel actPanel = new JPanel(new BorderLayout(5, 5));
-            actPanel.add(activity.getComponent(), BorderLayout.CENTER);
+            activity.openActivity(actCtx, this);
+            Component activityComponent = activity.getComponent();
+            actCtx.attach(activityComponent);
+            actPanel.add(activityComponent, BorderLayout.CENTER);
             JPanel buttons = new JPanel(new GridLayout(1, 0, 5, 0));
             List<Action> actions = activity.getActions();
             if ( actions != null ) {
@@ -175,7 +180,6 @@ public class AppPanel extends JPanel implements Activity.Navigator {
             }
             banner.addMessage(null, activity.getTitle(), activity.getDescription(), null, activity.getHelp());
             revalidate();
-            activity.activityOpenend(this, actCtx);
             repaint();
         }
     }

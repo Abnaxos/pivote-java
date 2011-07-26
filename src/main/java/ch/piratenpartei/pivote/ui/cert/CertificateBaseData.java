@@ -1,5 +1,6 @@
 package ch.piratenpartei.pivote.ui.cert;
 
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
@@ -27,6 +28,8 @@ import ch.raffael.util.swing.actions.CommonAction;
  */
 public class CertificateBaseData extends AbstractActivity<JPanel> {
 
+    private static Resources res = I18N.getBundle(Resources.class);
+
     private JTextField firstName;
     private JTextField lastName;
     private JTextField email;
@@ -50,12 +53,23 @@ public class CertificateBaseData extends AbstractActivity<JPanel> {
 
     @Override
     protected JPanel buildUi() {
-        actions(new CommonAction("Continue") {
+        actions(new CommonAction("Continue", res.forwardIcon()) {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
                     closeable = true;
-                    navigator().open(DevelUtilities.activityPlaceholder(getTitle(), "Step Two"));
+                    navigator().open(new AbstractActivity<Component>(getTitle(), "Step Two", I18N.getBundle(HelpResources.class).meta().resource(URL.class, "someHelp")) {
+                        @Override
+                        protected Component buildUi() {
+                            actions(new CommonAction("&Finish", res.okIcon()) {
+                                @Override
+                                public void actionPerformed(ActionEvent e) {
+                                    navigator().open(new CertificateManager());
+                                }
+                            });
+                            return DevelUtilities.componentPlaceholder("Step two goes here");
+                        }
+                    });
                 }
                 finally {
                     closeable = false;
