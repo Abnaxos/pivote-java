@@ -30,6 +30,11 @@
       <artifactId>cru-i18n</artifactId>
       <version>1105-SNAPSHOT</version>
     </dependency>
+    <dependency>
+      <groupId>ch.raffael.util</groupId>
+      <artifactId>cru-binding</artifactId>
+      <version>1105-SNAPSHOT</version>
+    </dependency>
 
     <dependency>
       <groupId>com.thoughtworks.xstream</groupId>
