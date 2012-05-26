@@ -22,4 +22,5 @@ public class ModelBean implements Observable {
     public void removePropertyChangeListener(PropertyChangeListener listener) {
         observableSupport.removePropertyChangeListener(listener);
     }
+
 }

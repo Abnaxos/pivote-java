@@ -6,6 +6,9 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.prefs.Preferences;
 
+import javax.jnlp.BasicService;
+import javax.jnlp.ServiceManager;
+import javax.jnlp.UnavailableServiceException;
 import javax.swing.BorderFactory;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
@@ -52,6 +55,14 @@ public final class PiVote {
     }
 
     private void start() {
+        try {
+            BasicService basic = (BasicService)ServiceManager.lookup(BasicService.class.getName());
+            System.out.println(basic.getCodeBase());
+        }
+        catch ( UnavailableServiceException e ) {
+// FIXME: Handle exception
+            e.printStackTrace();
+        }
         SwingUtil.setupMetalLookAndFeel();
         //I18N.setLenient(true);
         if ( !storageDirectory.isDirectory() ) {

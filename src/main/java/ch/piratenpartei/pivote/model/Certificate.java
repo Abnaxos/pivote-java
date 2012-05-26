@@ -2,6 +2,8 @@ package ch.piratenpartei.pivote.model;
 
 import java.util.UUID;
 
+import ch.piratenpartei.pivote.serialize.DataStreamFactory;
+import ch.piratenpartei.pivote.serialize.NonSerializableBeanException;
 import org.joda.time.LocalDate;
 
 import ch.raffael.util.beans.Property;
@@ -89,6 +91,20 @@ public class Certificate extends ModelBean {
 
     public void setValidUntil(LocalDate validUntil) {
         this.validUntil.set(validUntil);
+    }
+
+    public static void setupSerialization(DataStreamFactory.Builder builder) throws NonSerializableBeanException {
+        builder
+                .field("id")
+                .field("creationDate")
+                .field("publicKey")
+                .field("selfSignature")
+                .list("attributes", CertificateAttribute.class)
+                .list("signatures", Signature.class)
+                .field("status")
+                .field("status")
+                .field("privateKeyData")
+                .field("passphraseSalt");
     }
 
 }
