@@ -8,7 +8,7 @@
 
   <groupId>ch.piratenpartei.pivote</groupId>
   <artifactId>pivote-java</artifactId>
-  <packaging>jar</packaging>
+  <packaging>pom</packaging>
   <version>1.0-SNAPSHOT</version>
 
   <name>${project.groupId}:${project.artifactId}</name>
@@ -16,41 +16,18 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <webstart.codebase>http://piraten.raffael.ch/pivote-java</webstart.codebase>
   </properties>
 
-  <dependencies>
-    <dependency>
-      <groupId>ch.raffael.util</groupId>
-      <artifactId>cru-swing</artifactId>
-      <version>1.0-SNAPSHOT</version>
-    </dependency>
-    <dependency>
-      <groupId>ch.raffael.util</groupId>
-      <artifactId>cru-i18n</artifactId>
-      <version>1.0</version>
-    </dependency>
-    <dependency>
-      <groupId>ch.raffael.util</groupId>
-      <artifactId>cru-binding</artifactId>
-      <version>1.0-SNAPSHOT</version>
-    </dependency>
+  <modules>
+    <module>protocol</module>
+    <module>swing-client</module>
+  </modules>
 
+  <dependencies>
     <dependency>
       <groupId>joda-time</groupId>
       <artifactId>joda-time</artifactId>
       <version>1.6.2</version>
-    </dependency>
-
-    <dependency>
-      <groupId>com.jidesoft</groupId>
-      <artifactId>jide-oss</artifactId>
-      <version>2.10.0</version>
-    </dependency>
-    <dependency>
-      <groupId>com.intellij</groupId>
-      <artifactId>forms_rt</artifactId>
-      <version>10.5.1</version>
     </dependency>
 
     <dependency>
@@ -66,38 +43,24 @@
       <version>1.6.1</version>
       <scope>runtime</scope>
     </dependency>
-
-    <dependency>
-      <groupId>javax.javaws</groupId>
-      <artifactId>javaws</artifactId>
-      <version>1.0</version>
-      <scope>system</scope>
-      <systemPath>${java.home}/lib/javaws.jar</systemPath>
-    </dependency>
   </dependencies>
 
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>ch.raffael.util</groupId>
+        <artifactId>cru-common</artifactId>
+        <version>1.1-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>ch.raffael.util</groupId>
+        <artifactId>cru-beans</artifactId>
+        <version>1.1-SNAPSHOT</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
   <build>
-    <resources>
-      <resource>
-        <directory>src/main/resources</directory>
-        <includes>
-          <include>**/*.properties</include>
-          <include>**/*.png</include>
-          <include>**/*.html</include>
-        </includes>
-        <excludes>
-          <exclude>ch/piratenpartei/pivote/PiVoteResources.properties</exclude>
-        </excludes>
-        <filtering>false</filtering>
-      </resource>
-      <resource>
-        <directory>src/main/resources</directory>
-        <includes>
-          <include>ch/piratenpartei/pivote/PiVoteResources.properties</include>
-        </includes>
-        <filtering>true</filtering>
-      </resource>
-    </resources>
     <plugins>
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
@@ -116,55 +79,6 @@
               <mainClass>ch.piratenpartei.pivote.PiVote</mainClass>
             </manifest>
           </archive>
-        </configuration>
-      </plugin>
-      <plugin>
-        <artifactId>idea-forms-maven-plugin</artifactId>
-        <groupId>ch.raffael.maven</groupId>
-        <executions>
-          <execution>
-            <id>idea-forms</id>
-            <goals>
-              <goal>compile-forms</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.codehaus.mojo.webstart</groupId>
-        <artifactId>webstart-maven-plugin</artifactId>
-        <configuration>
-          <jnlp>
-            <mainClass>ch.piratenpartei.pivote.PiVote</mainClass>
-          </jnlp>
-          <sign>
-            <keystore>pivote-keystore</keystore>
-            <keypass>pivotepass</keypass>
-            <storepass>pivotepass</storepass>
-            <alias>pivote</alias>
-
-            <dnameCn>Raffael Herzog</dnameCn>
-            <dnameOu>None</dnameOu>
-            <dnameO>Privat</dnameO>
-            <dnameL>Zuerich</dnameL>
-            <dnameSt>Zuerich</dnameSt>
-            <dnameC>CH</dnameC>
-
-            <verify>true</verify>
-
-            <keystoreConfig>
-              <delete>true</delete>
-              <gen>true</gen>
-            </keystoreConfig>
-          </sign>
-        </configuration>
-      </plugin>
-      <plugin>
-        <artifactId>maven-assembly-plugin</artifactId>
-        <configuration>
-          <descriptors>
-            <descriptor>src/main/assembly/assembly.xml</descriptor>
-          </descriptors>
         </configuration>
       </plugin>
     </plugins>

@@ -1,7 +1,5 @@
 package ch.piratenpartei.pivote;
 
-import java.awt.Color;
-
 import javax.swing.ImageIcon;
 
 import ch.raffael.util.i18n.Default;
