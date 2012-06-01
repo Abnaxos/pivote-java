@@ -1,110 +1,150 @@
 package ch.piratenpartei.pivote.model;
 
+import java.beans.PropertyChangeListener;
+import java.util.List;
 import java.util.UUID;
 
-import ch.piratenpartei.pivote.serialize.DataStreamFactory;
-import ch.piratenpartei.pivote.serialize.NonSerializableBeanException;
-import org.joda.time.LocalDate;
+import ch.piratenpartei.pivote.serialize.types.Data;
+import ch.piratenpartei.pivote.serialize.util.AbstractPiVoteSerializable;
+import ch.piratenpartei.pivote.serialize.util.Serialize;
+import org.joda.time.LocalDateTime;
 
-import ch.raffael.util.beans.Property;
+import ch.raffael.util.beans.Observable;
+import ch.raffael.util.beans.ObservableSupport;
+
+import static ch.piratenpartei.pivote.model.util.CollectionProperties.*;
 
 
 /**
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
-public class Certificate extends ModelBean {
+@Serialize({
+    "magic: data",
+    "id: guid",
+    "creationDate: datetime",
+    "publicKey: data",
+    "selfSignature: data",
+    "attributes: Crypto.CertificateAttribute[]",
+    "signatures: Crypto.Signature[]",
+    "privateKeyStatus: Crypto.PrivateKeyStatus",
+    "privateKeyData: data",
+    "privateKeySalt: data",
+    "passphraseSalt: data"
+})
+public class Certificate extends AbstractPiVoteSerializable implements Observable {
 
-    private final Property<String> firstName = new Property<String>("firstName").bound(observableSupport);
-    private final Property<String> lastName = new Property<String>("lastName").bound(observableSupport);
-    private final Property<String> email = new Property<String>("email").bound(observableSupport);
+    private final ObservableSupport observable = new ObservableSupport(this);
 
-    private final Property<Type> type = new Property<Type>("type").bound(observableSupport);
-    private final Property<UUID> id = new Property<UUID>("id").bound(observableSupport);
-    private final Property<String> description = new Property<String>("description").bound(observableSupport);
+    private Data magic;
+    private UUID id;
+    private LocalDateTime creationDate;
+    private Data publicKey;
+    private Data selfSignature;
+    private List<CertificateAttribute> attributes;
+    private List<Signature> signatures;
+    private PrivateKeyStatus privateKeyStatus;
+    private Data privateKeyData;
+    private Data privateKeySalt;
+    private Data passphraseSalt;
 
-    private final Property<LocalDate> validFrom = new Property<LocalDate>("validFrom").bound(observableSupport);
-    private final Property<LocalDate> validUntil = new Property<LocalDate>("validUntil").bound(observableSupport);
-
-    public static enum Type {
-        VOTER, AUTHORITY, NOTARY
+    @Override
+    public void addPropertyChangeListener(PropertyChangeListener listener) {
+        observable.addPropertyChangeListener(listener);
     }
 
-    public String getFirstName() {
-        return firstName.get();
+    @Override
+    public void removePropertyChangeListener(PropertyChangeListener listener) {
+        observable.removePropertyChangeListener(listener);
     }
 
-    public void setFirstName(String firstName) {
-        this.firstName.set(firstName);
+    public Data getMagic() {
+        return this.magic;
     }
 
-    public String getLastName() {
-        return lastName.get();
-    }
-
-    public void setLastName(String lastName) {
-        this.lastName.set(lastName);
-    }
-
-    public String getEmail() {
-        return email.get();
-    }
-
-    public void setEmail(String email) {
-        this.email.set(email);
-    }
-
-    public Type getType() {
-        return type.get();
-    }
-
-    public void setType(Type type) {
-        this.type.set(type);
+    public void setMagic(Data magic) {
+        observable.firePropertyChange("magic", this.magic, this.magic = magic);
     }
 
     public UUID getId() {
-        return id.get();
+        return this.id;
     }
 
     public void setId(UUID id) {
-        this.id.set(id);
+        observable.firePropertyChange("id", this.id, this.id = id);
     }
 
-    public String getDescription() {
-        return description.get();
+    public LocalDateTime getCreationDate() {
+        return this.creationDate;
     }
 
-    public void setDescription(String description) {
-        this.description.set(description);
+    public void setCreationDate(LocalDateTime creationDate) {
+        observable.firePropertyChange("creationDate", this.creationDate, this.creationDate = creationDate);
     }
 
-    public LocalDate getValidFrom() {
-        return validFrom.get();
+    public Data getPublicKey() {
+        return this.publicKey;
     }
 
-    public void setValidFrom(LocalDate validFrom) {
-        this.validFrom.set(validFrom);
+    public void setPublicKey(Data publicKey) {
+        observable.firePropertyChange("publicKey", this.publicKey, this.publicKey = publicKey);
     }
 
-    public LocalDate getValidUntil() {
-        return validUntil.get();
+    public Data getSelfSignature() {
+        return this.selfSignature;
     }
 
-    public void setValidUntil(LocalDate validUntil) {
-        this.validUntil.set(validUntil);
+    public void setSelfSignature(Data selfSignature) {
+        observable.firePropertyChange("selfSignature", this.selfSignature, this.selfSignature = selfSignature);
     }
 
-    public static void setupSerialization(DataStreamFactory.Builder builder) throws NonSerializableBeanException {
-        builder
-                .field("id")
-                .field("creationDate")
-                .field("publicKey")
-                .field("selfSignature")
-                .list("attributes", CertificateAttribute.class)
-                .list("signatures", Signature.class)
-                .field("status")
-                .field("status")
-                .field("privateKeyData")
-                .field("passphraseSalt");
+    public List<CertificateAttribute> getAttributes() {
+        return this.attributes;
+    }
+
+    public void setAttributes(List<CertificateAttribute> attributes) {
+        attributes = copyOf(attributes);
+        observable.firePropertyChange("attributes", this.attributes, this.attributes = attributes);
+    }
+
+    public List<Signature> getSignatures() {
+        return this.signatures;
+    }
+
+    public void setSignatures(List<Signature> signatures) {
+        signatures = copyOf(signatures);
+        observable.firePropertyChange("signatures", this.signatures, this.signatures = signatures);
+    }
+
+    public PrivateKeyStatus getPrivateKeyStatus() {
+        return this.privateKeyStatus;
+    }
+
+    public void setPrivateKeyStatus(PrivateKeyStatus privateKeyStatus) {
+        observable.firePropertyChange("privateKeyStatus", this.privateKeyStatus, this.privateKeyStatus = privateKeyStatus);
+    }
+
+    public Data getPrivateKeyData() {
+        return this.privateKeyData;
+    }
+
+    public void setPrivateKeyData(Data privateKeyData) {
+        observable.firePropertyChange("privateKeyData", this.privateKeyData, this.privateKeyData = privateKeyData);
+    }
+
+    public Data getPrivateKeySalt() {
+        return this.privateKeySalt;
+    }
+
+    public void setPrivateKeySalt(Data privateKeySalt) {
+        observable.firePropertyChange("privateKeySalt", this.privateKeySalt, this.privateKeySalt = privateKeySalt);
+    }
+
+    public Data getPassphraseSalt() {
+        return this.passphraseSalt;
+    }
+
+    public void setPassphraseSalt(Data passphraseSalt) {
+        observable.firePropertyChange("passphraseSalt", this.passphraseSalt, this.passphraseSalt = passphraseSalt);
     }
 
 }

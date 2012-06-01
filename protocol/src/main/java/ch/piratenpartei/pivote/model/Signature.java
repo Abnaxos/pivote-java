@@ -1,63 +1,75 @@
 package ch.piratenpartei.pivote.model;
 
+import java.beans.PropertyChangeListener;
 import java.util.UUID;
 
-import ch.piratenpartei.pivote.serialize.Data;
-import ch.piratenpartei.pivote.serialize.DataStreamFactory;
-import ch.piratenpartei.pivote.serialize.NonSerializableBeanException;
+import ch.piratenpartei.pivote.serialize.types.Data;
+import ch.piratenpartei.pivote.serialize.util.AbstractPiVoteSerializable;
+import ch.piratenpartei.pivote.serialize.util.Serialize;
 import org.joda.time.LocalDateTime;
 
-import ch.raffael.util.beans.Property;
+import ch.raffael.util.beans.Observable;
+import ch.raffael.util.beans.ObservableSupport;
 
 
 /**
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
-public class Signature extends ModelBean {
+@Serialize({
+    "signerId: guid",
+    "signatureData: data",
+    "validFrom: datetime",
+    "validTo: datetime"
+})
+public class Signature extends AbstractPiVoteSerializable implements Observable {
 
-    private final Property<UUID> signerId = new Property<UUID>("signerId").bound(observableSupport);
-    private final Property<Data> signatureData = new Property<Data>("signatureData").bound(observableSupport);
-    private final Property<LocalDateTime> validFrom = new Property<LocalDateTime>("validFrom").bound(observableSupport);
-    private final Property<LocalDateTime> validUntil = new Property<LocalDateTime>("validUntil").bound(observableSupport);
+    private final ObservableSupport observableSupport = new ObservableSupport(this);
+
+    private UUID signerId;
+    private Data signatureData;
+    private LocalDateTime validFrom;
+    private LocalDateTime validTo;
+
+    @Override
+    public void addPropertyChangeListener(PropertyChangeListener listener) {
+        observableSupport.addPropertyChangeListener(listener);
+    }
+
+    @Override
+    public void removePropertyChangeListener(PropertyChangeListener listener) {
+        observableSupport.removePropertyChangeListener(listener);
+    }
 
     public UUID getSignerId() {
-        return signerId.get();
+        return this.signerId;
     }
 
     public void setSignerId(UUID signerId) {
-        this.signerId.set(signerId);
+        observableSupport.firePropertyChange("signerId", this.signerId, this.signerId = signerId);
     }
 
     public Data getSignatureData() {
-        return signatureData.get();
+        return this.signatureData;
     }
 
     public void setSignatureData(Data signatureData) {
-        this.signatureData.set(signatureData);
+        observableSupport.firePropertyChange("signatureData", this.signatureData, this.signatureData = signatureData);
     }
 
     public LocalDateTime getValidFrom() {
-        return validFrom.get();
+        return this.validFrom;
     }
 
     public void setValidFrom(LocalDateTime validFrom) {
-        this.validFrom.set(validFrom);
+        observableSupport.firePropertyChange("validFrom", this.validFrom, this.validFrom = validFrom);
     }
 
-    public LocalDateTime getValidUntil() {
-        return validUntil.get();
+    public LocalDateTime getValidTo() {
+        return this.validTo;
     }
 
-    public void setValidUntil(LocalDateTime validUntil) {
-        this.validUntil.set(validUntil);
-    }
-
-    public static void setupSerialization(DataStreamFactory.Builder builder) throws NonSerializableBeanException {
-        builder
-                .field("signerId")
-                .field("signatureData")
-                .field("validFrom")
-                .field("validUntil");
+    public void setValidTo(LocalDateTime validTo) {
+        observableSupport.firePropertyChange("validTo", this.validTo, this.validTo = validTo);
     }
 
 }

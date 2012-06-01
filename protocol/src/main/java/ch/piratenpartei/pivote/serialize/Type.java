@@ -1,24 +1,25 @@
 package ch.piratenpartei.pivote.serialize;
 
 import java.math.BigInteger;
-import java.util.Collections;
-import java.util.Set;
+import java.util.Map;
+import java.util.UUID;
 
-import ch.piratenpartei.pivote.serialize.impl.BigintHandler;
-import ch.piratenpartei.pivote.serialize.impl.BoolHandler;
-import ch.piratenpartei.pivote.serialize.impl.ByteHandler;
-import ch.piratenpartei.pivote.serialize.impl.DataHandler;
-import ch.piratenpartei.pivote.serialize.impl.DateTimeHandler;
-import ch.piratenpartei.pivote.serialize.impl.DoubleHandler;
-import ch.piratenpartei.pivote.serialize.impl.EnumHandler;
-import ch.piratenpartei.pivote.serialize.impl.FloatHandler;
-import ch.piratenpartei.pivote.serialize.impl.Handler;
-import ch.piratenpartei.pivote.serialize.impl.Int32Handler;
-import ch.piratenpartei.pivote.serialize.impl.Int64Handler;
-import ch.piratenpartei.pivote.serialize.impl.ObjectHandler;
-import ch.piratenpartei.pivote.serialize.impl.StringHandler;
-import ch.piratenpartei.pivote.serialize.impl.UInt32Handler;
-import com.google.common.collect.ImmutableSet;
+import ch.piratenpartei.pivote.serialize.handlers.BigintHandler;
+import ch.piratenpartei.pivote.serialize.handlers.BoolHandler;
+import ch.piratenpartei.pivote.serialize.handlers.ByteHandler;
+import ch.piratenpartei.pivote.serialize.handlers.DataHandler;
+import ch.piratenpartei.pivote.serialize.handlers.DateTimeHandler;
+import ch.piratenpartei.pivote.serialize.handlers.DoubleHandler;
+import ch.piratenpartei.pivote.serialize.handlers.FloatHandler;
+import ch.piratenpartei.pivote.serialize.handlers.Int32Handler;
+import ch.piratenpartei.pivote.serialize.handlers.Int64Handler;
+import ch.piratenpartei.pivote.serialize.handlers.LangStringHandler;
+import ch.piratenpartei.pivote.serialize.handlers.StringHandler;
+import ch.piratenpartei.pivote.serialize.handlers.UInt32Handler;
+import ch.piratenpartei.pivote.serialize.types.Data;
+import ch.piratenpartei.pivote.serialize.types.LangString;
+import ch.piratenpartei.pivote.serialize.types.UInt32;
+import com.google.common.collect.ImmutableMap;
 import org.joda.time.LocalDateTime;
 
 
@@ -28,72 +29,48 @@ import org.joda.time.LocalDateTime;
 public enum Type {
 
     BIGINT(new BigintHandler(), BigInteger.class),
-    LANGSTRING(null, Object.class), // FIXME: langstring?
-    BOOL(new BoolHandler(), boolean.class, Boolean.class),
-    BYTE(new ByteHandler(), byte.class, Byte.class),
+    LANGSTRING(new LangStringHandler(), LangString.class),
+    BOOL(new BoolHandler(), Boolean.class),
+    BYTE(new ByteHandler(), Byte.class),
     DATA(new DataHandler(), Data.class),
     DATETIME(new DateTimeHandler(), LocalDateTime.class),
-    DOUBLE(new DoubleHandler(), double.class, Double.class),
-    GUID(new ByteHandler(), byte[].class),
-    INT32(new Int32Handler(), int.class, Integer.class),
-    INT64(new Int64Handler(), long.class, Long.class),
-    FLOAT(new FloatHandler(), float.class, Float.class),
+    DOUBLE(new DoubleHandler(), Double.class),
+    GUID(new ByteHandler(), UUID.class),
+    INT32(new Int32Handler(), Integer.class),
+    INT64(new Int64Handler(), Long.class),
+    FLOAT(new FloatHandler(), Float.class),
     STRING(new StringHandler(), String.class),
-    UINT32(new UInt32Handler(), long.class, Long.class),
-    ENUM(null, Enum.class) {
-        @Override
-        public boolean isValidJavaType(Class<?> javaType) {
-            return javaType != null && javaType.isEnum();
-        }
-        @SuppressWarnings( { "unchecked" })
-        @Override
-        public Handler handler(Class<?> targetType) {
-            if ( isValidJavaType(targetType) ) {
-                return null;
-            }
-            return new EnumHandler((Class<? extends Enum>)targetType);
-        }
-    },
-    OBJECT(null, Object.class) {
-        @Override
-        public boolean isValidJavaType(Class<?> javaType) {
-            return !(javaType == null || javaType.isEnum() || javaType.isAnnotation() || javaType.isArray() || javaType.isPrimitive());
-        }
-        @Override
-        public Handler handler(Class<?> targetType) {
-            if ( isValidJavaType(targetType) ) {
-                return null;
-            }
-            return new ObjectHandler(targetType);
-        }
-    };
+    UINT32(new UInt32Handler(), UInt32.class),
 
-    private final Set<Class<?>> javaTypes;
+    ENUM(null, Enum.class);
+
+    private static final Map<String, Type> types;
+    static {
+        ImmutableMap.Builder<String, Type> builder =ImmutableMap.builder();
+        for ( Type t : Type.values() ) {
+            builder.put(t.name(), t);
+        }
+        types = builder.build();
+    }
+
+    private final Class<?> javaType;
     private final Handler handler;
 
     private Type(Handler handler, Class<?> javaType) {
-        this.javaTypes = Collections.<Class<?>>singleton(javaType);
+        this.javaType = javaType;
         this.handler = handler;
     }
 
-    private Type(Handler handler, Class<?>... javaTypes) {
-        this.javaTypes = ImmutableSet.copyOf(javaTypes);
-        this.handler = handler;
+    public Class<?> getJavaType() {
+        return javaType;
     }
 
-    public Set<Class<?>> getJavaTypes() {
-        return javaTypes;
-    }
-
-    public boolean isValidJavaType(Class<?> javaType) {
-        return javaTypes.contains(javaType);
-    }
-    
-    public Handler handler(Class<?> targetType) {
-        if ( !javaTypes.contains(targetType) ) {
-            return null;
-        }
+    public Handler handler() {
         return handler;
+    }
+
+    public static Type forName(String name) {
+        return types.get(name.toUpperCase());
     }
 
 }
