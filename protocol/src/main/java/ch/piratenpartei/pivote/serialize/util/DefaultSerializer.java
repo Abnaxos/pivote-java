@@ -1,4 +1,4 @@
-package ch.piratenpartei.pivote.serialize.handlers;
+package ch.piratenpartei.pivote.serialize.util;
 
 import java.beans.PropertyDescriptor;
 import java.io.IOException;
@@ -9,29 +9,27 @@ import java.util.List;
 import ch.piratenpartei.pivote.serialize.DataInput;
 import ch.piratenpartei.pivote.serialize.Handler;
 import ch.piratenpartei.pivote.serialize.SerializationException;
+import ch.piratenpartei.pivote.serialize.Serializer;
 
 
 /**
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
-public class CompoundHandler extends ObjectHandler implements Handler {
+public class DefaultSerializer implements Serializer {
 
     private final List<Field> fields = new LinkedList<Field>();
 
-    public CompoundHandler(Class<?> expectedClass) {
-        super(expectedClass);
+    public DefaultSerializer() {
     }
 
     @Override
-    public Object read(DataInput input) throws IOException {
-        Object target = newInstance();
+    public void read(Object target, DataInput input) throws IOException {
         for ( Field field : fields ) {
             field.accessor.set(target, field.handler.read(input));
         }
-        return target;
     }
 
-    public CompoundHandler append(Handler handler, Accessor accessor) {
+    public Serializer append(Handler handler, Accessor accessor) {
         fields.add(new Field(handler, accessor));
         return this;
     }
@@ -42,6 +40,13 @@ public class CompoundHandler extends ObjectHandler implements Handler {
         private Field(Handler handler, Accessor accessor) {
             this.handler = handler;
             this.accessor = accessor;
+        }
+        @Override
+        public String toString() {
+            return "Field[" +
+                    "handler=" + handler +
+                    ",accessor=" + accessor +
+                    "]";
         }
     }
 
@@ -61,6 +66,11 @@ public class CompoundHandler extends ObjectHandler implements Handler {
         }
 
         @Override
+        public String toString() {
+            return "PropertyAccessor[" + descriptor.getName() + "]";
+        }
+
+        @Override
         public Object get(Object target) throws SerializationException {
             try {
                 return descriptor.getReadMethod().invoke(target);
@@ -75,6 +85,9 @@ public class CompoundHandler extends ObjectHandler implements Handler {
 
         @Override
         public void set(Object target, Object value) throws SerializationException {
+            if ( value != null && !descriptor.getPropertyType().isInstance(value) ) {
+                throw new SerializationException("Cannot write value " + value + " to property " + descriptor.getName() + ": Incompatible types");
+            }
             try {
                 descriptor.getWriteMethod().invoke(target, value);
             }
@@ -86,4 +99,5 @@ public class CompoundHandler extends ObjectHandler implements Handler {
             }
         }
     }
+
 }

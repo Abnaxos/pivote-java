@@ -11,6 +11,7 @@ import ch.piratenpartei.pivote.serialize.handlers.DataHandler;
 import ch.piratenpartei.pivote.serialize.handlers.DateTimeHandler;
 import ch.piratenpartei.pivote.serialize.handlers.DoubleHandler;
 import ch.piratenpartei.pivote.serialize.handlers.FloatHandler;
+import ch.piratenpartei.pivote.serialize.handlers.GuidHandler;
 import ch.piratenpartei.pivote.serialize.handlers.Int32Handler;
 import ch.piratenpartei.pivote.serialize.handlers.Int64Handler;
 import ch.piratenpartei.pivote.serialize.handlers.LangStringHandler;
@@ -35,7 +36,7 @@ public enum Type {
     DATA(new DataHandler(), Data.class),
     DATETIME(new DateTimeHandler(), LocalDateTime.class),
     DOUBLE(new DoubleHandler(), Double.class),
-    GUID(new ByteHandler(), UUID.class),
+    GUID(new GuidHandler(), UUID.class),
     INT32(new Int32Handler(), Integer.class),
     INT64(new Int64Handler(), Long.class),
     FLOAT(new FloatHandler(), Float.class),

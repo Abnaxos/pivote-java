@@ -1,4 +1,4 @@
-package ch.piratenpartei.pivote.model;
+package ch.piratenpartei.pivote.model.crypto;
 
 import java.beans.PropertyChangeListener;
 import java.util.UUID;

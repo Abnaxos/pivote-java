@@ -14,8 +14,8 @@ import ch.piratenpartei.pivote.serialize.Handler;
 import ch.piratenpartei.pivote.serialize.PiVoteSerializable;
 import ch.piratenpartei.pivote.serialize.SerializationContext;
 import ch.piratenpartei.pivote.serialize.SerializationException;
+import ch.piratenpartei.pivote.serialize.Serializer;
 import ch.piratenpartei.pivote.serialize.Type;
-import ch.piratenpartei.pivote.serialize.handlers.CompoundHandler;
 import ch.piratenpartei.pivote.serialize.handlers.EnumHandler;
 import ch.piratenpartei.pivote.serialize.handlers.ListHandler;
 import ch.piratenpartei.pivote.serialize.handlers.MapHandler;
@@ -32,7 +32,7 @@ import static java.util.Arrays.asList;
 /**
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
-public class HandlerBuilder {
+public class SerializerBuilder {
 
     /**
      * Groups:
@@ -51,7 +51,7 @@ public class HandlerBuilder {
     private final Class<? extends PiVoteSerializable> targetClass;
     private final SerializationContext context;
 
-    public HandlerBuilder(Class<? extends PiVoteSerializable> targetClass, SerializationContext context) {
+    public SerializerBuilder(Class<? extends PiVoteSerializable> targetClass, SerializationContext context) {
         if ( targetClass.isInterface() || targetClass.isAnnotation() || targetClass.isArray() || targetClass.isEnum() ) {
             throw new IllegalArgumentException(targetClass + " is not a class");
         }
@@ -59,10 +59,10 @@ public class HandlerBuilder {
         this.context = context;
     }
 
-    public Handler build() throws SerializationException {
+    public Serializer build() throws SerializationException {
         List<Definition> definitions = collectDefinitions(new LinkedList<Definition>(), targetClass);
         Map<String, PropertyDescriptor> properties = getProperties(targetClass);
-        CompoundHandler serializer = new CompoundHandler(targetClass);
+        DefaultSerializer serializer = new DefaultSerializer();
         for ( Definition def : definitions ) {
             PropertyDescriptor property = properties.get(def.propertyName);
             if ( property == null ) {
@@ -73,7 +73,7 @@ public class HandlerBuilder {
                     throw new IllegalArgumentException(targetClass + ": Type " + List.class + " is not applicable to Java type " + property.getPropertyType());
                 }
                 serializer.append(new ListHandler(handler(def.type, property)),
-                                  new CompoundHandler.PropertyAccessor(property));
+                                  new DefaultSerializer.PropertyAccessor(property));
             }
             else if ( def.isMap ) {
                 if ( !property.getPropertyType().isAssignableFrom(Map.class) ) {
@@ -81,10 +81,10 @@ public class HandlerBuilder {
                 }
                 serializer.append(new MapHandler(handler(def.type, property),
                                                  handler(def.valueType, property)),
-                                  new CompoundHandler.PropertyAccessor(property));
+                                  new DefaultSerializer.PropertyAccessor(property));
             }
             else {
-                serializer.append(handler(def.type, property), new CompoundHandler.PropertyAccessor(property));
+                serializer.append(handler(def.type, property), new DefaultSerializer.PropertyAccessor(property));
             }
         }
         return serializer;
@@ -98,14 +98,10 @@ public class HandlerBuilder {
             if ( javaClass == null ) {
                 throw new SerializationException(targetClass.getName() + "::" + property.getName() + ": Unknown protocol class " + type);
             }
-            else if ( !property.getPropertyType().isAssignableFrom(javaClass) ) {
-                throw new SerializationException(targetClass.getName() + "::" + property.getName() + ": Incompatible types: " + javaClass + " <-> " + property.getPropertyType());
-            }
-            Handler handler = context.getHandler(javaClass);
-            if ( handler == null ) {
-                handler = new ObjectHandler(property.getPropertyType());
-            }
-            return handler;
+            //else if ( !property.getPropertyType().isAssignableFrom(javaClass) ) {
+            //    throw new SerializationException(targetClass.getName() + "::" + property.getName() + ": Incompatible types: " + javaClass + " <-> " + property.getPropertyType());
+            //}
+            return new ObjectHandler();
         }
         else if ( t == Type.ENUM ) {
             if ( !property.getPropertyType().isEnum() ) {
@@ -115,8 +111,8 @@ public class HandlerBuilder {
         }
         else {
             Class<?> propertyType = Primitives.wrap(property.getPropertyType());
-            if ( !t.getJavaType().isAssignableFrom(propertyType) ) {
-                throw new SerializationException(targetClass + "::" + "." + property.getName() + ": Property type " + property.getPropertyType() + " is incompatible with " + t);
+            if ( !propertyType.isAssignableFrom(t.getJavaType()) ) {
+                throw new SerializationException(targetClass + "::" + property.getName() + ": Property type " + property.getPropertyType() + " is incompatible with " + t);
             }
             return t.handler();
         }
@@ -163,7 +159,7 @@ public class HandlerBuilder {
         private final String valueType;
         private Definition(String definition) {
             definition = definition.trim();
-            Matcher matcher = HandlerBuilder.SYNTAX.matcher(definition);
+            Matcher matcher = SerializerBuilder.SYNTAX.matcher(definition);
             if ( !matcher.matches() ) {
                 throw new IllegalArgumentException("Invalid field definition: " + definition);
             }
@@ -171,7 +167,7 @@ public class HandlerBuilder {
             type = matcher.group(2);
             String collection = matcher.group(4);
             if ( collection != null ) {
-                if ( collection.equals("*") ) {
+                if ( collection.equals("[]") ) {
                     isList = true;
                     isMap = false;
                     valueType = null;

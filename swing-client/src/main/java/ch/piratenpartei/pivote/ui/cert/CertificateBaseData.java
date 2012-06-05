@@ -11,7 +11,7 @@ import javax.swing.JTextField;
 
 import ch.piratenpartei.pivote.DevelUtilities;
 import ch.piratenpartei.pivote.HelpResources;
-import ch.piratenpartei.pivote.model.Certificate;
+import ch.piratenpartei.pivote.model.crypto.Certificate;
 import ch.piratenpartei.pivote.ui.AbstractActivity;
 
 import ch.raffael.util.binding.PresentationModel;

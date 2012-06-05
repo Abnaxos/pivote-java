@@ -18,7 +18,7 @@ public @interface Serialize {
      * "<code>identifier: type</code>". See <code>{@link ch.piratenpartei.pivote.serialize.Type}</code> for available types,
      * type names are case-insensitive. For lists, append a '*' to type, for maps, use
      * "<code>keyType->valueType</code>. Spaces between the elements are ignored. See the
-     * regular expression in {@link HandlerBuilder#SYNTAX}.
+     * regular expression in {@link SerializerBuilder#SYNTAX}.
      * <p/>
      * Examples:
      * <ul>

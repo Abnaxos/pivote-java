@@ -30,7 +30,7 @@ public class SerializationContext {
     private static final Logger log = LogUtil.getLogger();
 
     private final BiMap<String, Class<? extends PiVoteSerializable>> mappings = HashBiMap.create();
-    private final Map<Class<? extends PiVoteSerializable>, Handler> handlers = new HashMap<Class<? extends PiVoteSerializable>, Handler>();
+    private final Map<Class<? extends PiVoteSerializable>, Serializer> serializers = new HashMap<Class<? extends PiVoteSerializable>, Serializer>();
 
     public SerializationContext() throws ClassNotFoundException {
         this(null);
@@ -44,7 +44,7 @@ public class SerializationContext {
     protected synchronized void loadMappings() throws ClassNotFoundException {
         try {
             Properties properties = null;
-            Enumeration<URL> resources = classLoader.getResources("/META-INF/ch.piratenpartei.pivote.serialize.mappings.properties");
+            Enumeration<URL> resources = classLoader.getResources("META-INF/ch/piratenpartei/pivote/serialize/class-mappings.properties");
             while ( resources.hasMoreElements() ) {
                 URL url = resources.nextElement();
                 log.debug("Loading mappings from {}", url);
@@ -114,12 +114,12 @@ public class SerializationContext {
         return mappings.inverse().get(clazz);
     }
 
-    public Handler getHandler(Class<? extends PiVoteSerializable> clazz) {
-        return handlers.get(clazz);
+    public Serializer getSerializer(Class<? extends PiVoteSerializable> clazz) {
+        return serializers.get(clazz);
     }
 
-    public void setHandler(Class<? extends PiVoteSerializable> clazz, Handler handler) {
-        handlers.put(clazz, handler);
+    public void setSerializer(Class<? extends PiVoteSerializable> clazz, Serializer serializer) {
+        serializers.put(clazz, serializer);
     }
 
 }

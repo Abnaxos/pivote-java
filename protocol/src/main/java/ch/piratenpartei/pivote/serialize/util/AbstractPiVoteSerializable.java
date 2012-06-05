@@ -3,10 +3,10 @@ package ch.piratenpartei.pivote.serialize.util;
 import java.io.IOException;
 
 import ch.piratenpartei.pivote.serialize.DataInput;
-import ch.piratenpartei.pivote.serialize.Handler;
 import ch.piratenpartei.pivote.serialize.PiVoteSerializable;
 import ch.piratenpartei.pivote.serialize.SerializationContext;
 import ch.piratenpartei.pivote.serialize.SerializationException;
+import ch.piratenpartei.pivote.serialize.Serializer;
 
 
 /**
@@ -14,21 +14,21 @@ import ch.piratenpartei.pivote.serialize.SerializationException;
  */
 public abstract class AbstractPiVoteSerializable implements PiVoteSerializable {
 
-    protected Handler buildHandler(SerializationContext context) throws SerializationException {
-        return new HandlerBuilder(getClass(), context).build();
+    protected Serializer buildSerializer(SerializationContext context) throws SerializationException {
+        return new SerializerBuilder(getClass(), context).build();
     }
 
-    protected Handler handler(SerializationContext context) throws SerializationException {
-        Handler handler = context.getHandler(getClass());
-        if ( handler == null ) {
-            handler = buildHandler(context);
-            context.setHandler(getClass(), handler);
+    protected Serializer handler(SerializationContext context) throws SerializationException {
+        Serializer serializer = context.getSerializer(getClass());
+        if ( serializer == null ) {
+            serializer = buildSerializer(context);
+            context.setSerializer(getClass(), serializer);
         }
-        return handler;
+        return serializer;
     }
 
     @Override
     public void read(DataInput input) throws IOException {
-        handler(input.getContext()).read(input);
+        handler(input.getContext()).read(this, input);
     }
 }

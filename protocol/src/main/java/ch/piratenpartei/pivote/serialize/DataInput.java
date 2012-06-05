@@ -14,6 +14,7 @@ import ch.piratenpartei.pivote.rpc.RemoteException;
 import ch.piratenpartei.pivote.serialize.types.Data;
 import ch.piratenpartei.pivote.serialize.types.UInt32;
 import com.google.common.base.Charsets;
+import org.joda.time.Duration;
 import org.joda.time.LocalDateTime;
 
 
@@ -60,8 +61,8 @@ public class DataInput implements Closeable {
     }
 
     public LocalDateTime readDateTime() throws IOException {
-        long offset = readInt64()/10000; // 100nanos
-        return null;
+        long offset = DataUtils.nano100ToMillis(readInt64());
+        return DataUtils.BASE_DATETIME.plus(new Duration(offset));
     }
 
     public double readDouble() throws IOException {
@@ -70,14 +71,18 @@ public class DataInput implements Closeable {
     }
 
     public UUID readGuid() throws IOException {
-        read(16);
-        try {
-            buffer.order(ByteOrder.BIG_ENDIAN);
-            return new UUID(buffer.getLong(), buffer.getLong());
+        UInt32 length = readUInt32();
+        if ( length.intValue() != 16 ) {
+            throw new SerializationException("128bit UUID expected");
         }
-        finally {
-            buffer.order(ByteOrder.LITTLE_ENDIAN);
-        }
+        byte[] bytes = new byte[16];
+        read(bytes, 16);
+        // for some strange reason, we need to swap some bytes :( ask Exception ...
+        DataUtils.reverseBytes(bytes, 0, 4);
+        DataUtils.reverseBytes(bytes, 4, 2);
+        DataUtils.reverseBytes(bytes, 6, 2);
+        ByteBuffer buf = ByteBuffer.wrap(bytes).order(ByteOrder.BIG_ENDIAN);
+        return new UUID(buf.getLong(), buf.getLong());
     }
 
     public int readInt32() throws IOException {
@@ -100,6 +105,13 @@ public class DataInput implements Closeable {
         return new String(bytes, Charsets.UTF_8);
     }
 
+    public String readCString() throws IOException {
+        int length = readByte() & 0xff;
+        byte[] buf = new byte[length];
+        read(buf, length);
+        return new String(buf, Charsets.US_ASCII);
+    }
+
     public UInt32 readUInt32() throws IOException {
         read(4);
         return new UInt32(
@@ -108,6 +120,26 @@ public class DataInput implements Closeable {
                 | (readUnsignedByte() << 16)
                 | (readUnsignedByte() << 24)
                 ) & 0xffffffffL);
+    }
+
+    public Object readObject() throws IOException {
+        String protocolClass = readCString();
+        Class<? extends PiVoteSerializable> javaClass = context.getJavaClass(protocolClass);
+        PiVoteSerializable target;
+        if ( javaClass == null ) {
+            throw new SerializationException("Unknown class: " + protocolClass);
+        }
+        try {
+            target = javaClass.newInstance();
+        }
+        catch ( InstantiationException e ) {
+            throw new SerializationException("Cannot create object of class " + javaClass.getName(), e);
+        }
+        catch ( IllegalAccessException e ) {
+            throw new SerializationException("Cannot create object of class " + javaClass.getName(), e);
+        }
+        target.read(this);
+        return target;
     }
 
     @SuppressWarnings("unchecked")

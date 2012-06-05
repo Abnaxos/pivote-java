@@ -4,8 +4,6 @@ import java.io.IOException;
 
 import ch.piratenpartei.pivote.serialize.DataInput;
 import ch.piratenpartei.pivote.serialize.Handler;
-import ch.piratenpartei.pivote.serialize.PiVoteSerializable;
-import ch.piratenpartei.pivote.serialize.SerializationException;
 
 
 /**
@@ -13,28 +11,11 @@ import ch.piratenpartei.pivote.serialize.SerializationException;
  */
 public class ObjectHandler implements Handler {
 
-    protected final Class<?> expectedClass;
-
-    public ObjectHandler(Class<?> expectedClass) {
-        this.expectedClass = expectedClass;
-    }
-
-    protected PiVoteSerializable newInstance() throws SerializationException {
-        try {
-            return (PiVoteSerializable)expectedClass.newInstance();
-        }
-        catch ( InstantiationException e ) {
-            throw new SerializationException("Cannot create object of class " + expectedClass.getName(), e);
-        }
-        catch ( IllegalAccessException e ) {
-            throw new SerializationException("Cannot create object of class " + expectedClass.getName(), e);
-        }
+    public ObjectHandler() {
     }
 
     @Override
     public Object read(DataInput input) throws IOException {
-        PiVoteSerializable target = newInstance();
-        target.read(input);
-        return target;
+        return input.readObject();
     }
 }
