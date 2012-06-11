@@ -10,4 +10,6 @@ public interface PiVoteSerializable {
 
     void read(DataInput input) throws IOException;
 
+    void write(DataOutput output) throws IOException;
+
 }

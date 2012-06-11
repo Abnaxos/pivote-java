@@ -4,6 +4,7 @@ import java.beans.PropertyChangeListener;
 import java.io.IOException;
 
 import ch.piratenpartei.pivote.serialize.DataInput;
+import ch.piratenpartei.pivote.serialize.DataOutput;
 import ch.piratenpartei.pivote.serialize.PiVoteSerializable;
 import ch.piratenpartei.pivote.serialize.SerializationContext;
 import ch.piratenpartei.pivote.serialize.SerializationException;
@@ -11,6 +12,7 @@ import ch.piratenpartei.pivote.serialize.Serializer;
 
 import ch.raffael.util.beans.Observable;
 import ch.raffael.util.beans.ObservableSupport;
+import ch.raffael.util.common.NotImplementedException;
 
 
 /**
@@ -46,5 +48,10 @@ public abstract class AbstractPiVoteSerializable implements PiVoteSerializable, 
     @Override
     public void read(DataInput input) throws IOException {
         handler(input.getContext()).read(this, input);
+    }
+
+    @Override
+    public void write(DataOutput output) throws IOException {
+        throw new NotImplementedException();
     }
 }
