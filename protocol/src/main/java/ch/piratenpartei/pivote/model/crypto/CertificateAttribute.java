@@ -3,6 +3,7 @@ package ch.piratenpartei.pivote.model.crypto;
 import java.beans.PropertyChangeListener;
 
 import ch.piratenpartei.pivote.serialize.util.AbstractPiVoteSerializable;
+import ch.piratenpartei.pivote.serialize.util.Field;
 import ch.piratenpartei.pivote.serialize.util.Serialize;
 
 import ch.raffael.util.beans.Observable;
@@ -12,7 +13,7 @@ import ch.raffael.util.beans.ObservableSupport;
 /**
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
-@Serialize("name: enum")
+@Serialize(@Field(name = "name", type = "enum"))
 public abstract class CertificateAttribute extends AbstractPiVoteSerializable implements Observable {
 
     private final ObservableSupport observable = new ObservableSupport(this);

@@ -5,6 +5,7 @@ import java.util.UUID;
 
 import ch.piratenpartei.pivote.serialize.types.Data;
 import ch.piratenpartei.pivote.serialize.util.AbstractPiVoteSerializable;
+import ch.piratenpartei.pivote.serialize.util.Field;
 import ch.piratenpartei.pivote.serialize.util.Serialize;
 import org.joda.time.LocalDateTime;
 
@@ -16,10 +17,10 @@ import ch.raffael.util.beans.ObservableSupport;
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
 @Serialize({
-    "signerId: guid",
-    "signatureData: data",
-    "validFrom: datetime",
-    "validTo: datetime"
+    @Field(name = "signerId", type = "guid"),
+    @Field(name = "signatureData", type = "data"),
+    @Field(name = "validFrom", type = "datetime"),
+    @Field(name = "validTo", type = "datetime")
 })
 public class Signature extends AbstractPiVoteSerializable implements Observable {
 

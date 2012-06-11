@@ -1,5 +1,6 @@
 package ch.piratenpartei.pivote.model.crypto;
 
+import ch.piratenpartei.pivote.serialize.util.Field;
 import ch.piratenpartei.pivote.serialize.util.Serialize;
 
 import static com.google.common.base.Preconditions.*;
@@ -8,7 +9,7 @@ import static com.google.common.base.Preconditions.*;
 /**
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
-@Serialize("value: int32")
+@Serialize(@Field(name = "value", type = "int32"))
 public class Int32CertificateAttribute extends CertificateAttribute {
 
     @Override

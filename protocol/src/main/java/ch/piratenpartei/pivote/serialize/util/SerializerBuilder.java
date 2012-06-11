@@ -3,13 +3,17 @@ package ch.piratenpartei.pivote.serialize.util;
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import ch.piratenpartei.pivote.serialize.DataInput;
+import ch.piratenpartei.pivote.serialize.DataOutput;
 import ch.piratenpartei.pivote.serialize.Handler;
 import ch.piratenpartei.pivote.serialize.PiVoteSerializable;
 import ch.piratenpartei.pivote.serialize.SerializationContext;
@@ -20,13 +24,10 @@ import ch.piratenpartei.pivote.serialize.handlers.EnumHandler;
 import ch.piratenpartei.pivote.serialize.handlers.ListHandler;
 import ch.piratenpartei.pivote.serialize.handlers.MapHandler;
 import ch.piratenpartei.pivote.serialize.handlers.ObjectHandler;
-import com.google.common.base.Function;
+import com.google.common.base.Throwables;
 import com.google.common.primitives.Primitives;
 
 import ch.raffael.util.beans.BeanException;
-
-import static com.google.common.collect.Lists.*;
-import static java.util.Arrays.asList;
 
 
 /**
@@ -64,11 +65,15 @@ public class SerializerBuilder {
         Map<String, PropertyDescriptor> properties = getProperties(targetClass);
         DefaultSerializer serializer = new DefaultSerializer();
         for ( Definition def : definitions ) {
-            PropertyDescriptor property = properties.get(def.propertyName);
+            PropertyDescriptor property = properties.get(def.name);
             if ( property == null ) {
-                throw new IllegalArgumentException(targetClass + ": No such property: " + def.propertyName);
+                throw new IllegalArgumentException(targetClass + ": No such property: " + def.name);
             }
-            if ( def.isList ) {
+            if ( def.reader != null ) {
+                assert def.writer != null;
+                serializer.append(new CustomSerializer(def.reader, def.writer));
+            }
+            else if ( def.isList ) {
                 if ( !property.getPropertyType().isAssignableFrom(List.class) ) {
                     throw new IllegalArgumentException(targetClass + ": Type " + List.class + " is not applicable to Java type " + property.getPropertyType());
                 }
@@ -118,20 +123,16 @@ public class SerializerBuilder {
         }
     }
 
-    private static List<Definition> collectDefinitions(List<Definition> target, Class<?> type) {
+    private static List<Definition> collectDefinitions(List<Definition> target, final Class<?> type) throws SerializationException {
         if ( type == Object.class ) {
             return target;
         }
         collectDefinitions(target, type.getSuperclass());
         Serialize annotation = type.getAnnotation(Serialize.class);
         if ( annotation != null ) {
-            target.addAll(transform(asList(annotation.value()),
-                                    new Function<String, Definition>() {
-                                        @Override
-                                        public Definition apply(String input) {
-                                            return new Definition(input);
-                                        }
-                                    }));
+            for ( Field f : annotation.value() ) {
+                target.add(new Definition(type, f));
+            }
         }
         return target;
     }
@@ -151,37 +152,89 @@ public class SerializerBuilder {
         return result;
     }
 
+    private static String capitalize(String string) {
+        if ( string.isEmpty() ) {
+            return string;
+        }
+        else {
+            return Character.toUpperCase(string.charAt(0)) + string.substring(1);
+        }
+    }
+
+    private static Method getMethod(Class<?> clazz, String name, Class<?>... argumentTypes) {
+        try {
+            return clazz.getDeclaredMethod(name, argumentTypes);
+        }
+        catch ( NoSuchMethodException e ) {
+            return null;
+        }
+    }
+
     private static class Definition {
-        private final String propertyName;
+        private final String name;
         private final String type;
         private final boolean isList;
         private final boolean isMap;
         private final String valueType;
-        private Definition(String definition) {
-            definition = definition.trim();
-            Matcher matcher = SerializerBuilder.SYNTAX.matcher(definition);
-            if ( !matcher.matches() ) {
-                throw new IllegalArgumentException("Invalid field definition: " + definition);
+        private final Method reader;
+        private final Method writer;
+        private Definition(Class<?> clazz, Field field) throws SerializationException {
+            name = field.name().trim();
+            String type = field.type().trim();
+            if ( type.endsWith("[]") ) {
+                type = type.substring(0, type.length() - 2).trim();
+                valueType = null;
+                isList = true;
+                isMap = false;
             }
-            propertyName = matcher.group(1);
-            type = matcher.group(2);
-            String collection = matcher.group(4);
-            if ( collection != null ) {
-                if ( collection.equals("[]") ) {
-                    isList = true;
-                    isMap = false;
-                    valueType = null;
-                }
-                else {
-                    isList = false;
-                    isMap = true;
-                    valueType = matcher.group(5);
-                }
+            else if ( type.contains("->") ) {
+                int pos = type.indexOf("->");
+                type = type.substring(0, pos).trim();
+                valueType = type.substring(pos + 2).trim();
+                isList = false;
+                isMap = true;
             }
             else {
+                valueType = null;
                 isList = false;
                 isMap = false;
-                valueType = null;
+            }
+            this.type = type;
+            reader = getMethod(clazz, "read" + capitalize(name), DataInput.class);
+            writer = getMethod(clazz, "write" + capitalize(name), DataOutput.class);
+            if ( (reader == null && writer != null) || (writer == null && reader != null) ) {
+                throw new IllegalArgumentException(clazz + ": Must specify reader AND writer or none of them");
+            }
+        }
+
+    }
+
+    private static class CustomSerializer implements Serializer {
+        private final Method reader;
+        private final Method writer;
+        private CustomSerializer(Method reader, Method writer) {
+            this.reader = reader;
+            this.writer = writer;
+        }
+        @Override
+        public void read(Object target, DataInput input) throws IOException {
+            invoke(target, reader, input);
+        }
+        private void invoke(Object target, Method method, Object... args) throws IOException {
+            boolean reset = method.isAccessible();
+            try {
+                method.setAccessible(true);
+                method.invoke(target, args);
+            }
+            catch ( InvocationTargetException e ) {
+                Throwables.propagateIfInstanceOf(e.getTargetException(), IOException.class);
+                throw new SerializationException("Exception invoking " + method, e.getTargetException());
+            }
+            catch ( IllegalAccessException e ) {
+                throw new SerializationException("Exception invoking " + method, e);
+            }
+            finally {
+                method.setAccessible(reset);
             }
         }
     }

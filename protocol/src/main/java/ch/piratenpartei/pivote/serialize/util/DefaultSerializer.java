@@ -17,15 +17,15 @@ import ch.piratenpartei.pivote.serialize.Serializer;
  */
 public class DefaultSerializer implements Serializer {
 
-    private final List<Field> fields = new LinkedList<Field>();
+    private final List<Serializer> fields = new LinkedList<Serializer>();
 
     public DefaultSerializer() {
     }
 
     @Override
     public void read(Object target, DataInput input) throws IOException {
-        for ( Field field : fields ) {
-            field.accessor.set(target, field.handler.read(input));
+        for ( Serializer field : fields ) {
+            field.read(target, input);
         }
     }
 
@@ -34,7 +34,12 @@ public class DefaultSerializer implements Serializer {
         return this;
     }
 
-    private static class Field {
+    public Serializer append(Serializer serializer) {
+        fields.add(serializer);
+        return this;
+    }
+
+    private static class Field implements Serializer {
         private final Handler handler;
         private final Accessor accessor;
         private Field(Handler handler, Accessor accessor) {
@@ -47,6 +52,10 @@ public class DefaultSerializer implements Serializer {
                     "handler=" + handler +
                     ",accessor=" + accessor +
                     "]";
+        }
+        @Override
+        public void read(Object target, DataInput input) throws IOException {
+            accessor.set(target, handler.read(input));
         }
     }
 
