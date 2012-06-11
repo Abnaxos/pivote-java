@@ -1,6 +1,5 @@
 package ch.piratenpartei.pivote.model.crypto;
 
-import java.beans.PropertyChangeListener;
 import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
@@ -13,8 +12,6 @@ import ch.piratenpartei.pivote.serialize.util.Field;
 import ch.piratenpartei.pivote.serialize.util.Serialize;
 import org.joda.time.LocalDateTime;
 
-import ch.raffael.util.beans.Observable;
-import ch.raffael.util.beans.ObservableSupport;
 import ch.raffael.util.common.NotImplementedException;
 
 import static ch.piratenpartei.pivote.model.util.CollectionProperties.*;
@@ -36,9 +33,7 @@ import static ch.piratenpartei.pivote.model.util.CollectionProperties.*;
     @Field(name = "privateKeySalt", type = "data"),
     @Field(name = "passphraseSalt", type = "data")
 })
-public class Certificate extends AbstractPiVoteSerializable implements Observable {
-
-    private final ObservableSupport observable = new ObservableSupport(this);
+public class Certificate extends AbstractPiVoteSerializable{
 
     private Data magic;
     private UUID id;
@@ -51,16 +46,6 @@ public class Certificate extends AbstractPiVoteSerializable implements Observabl
     private Data privateKeyData;
     private Data privateKeySalt;
     private Data passphraseSalt;
-
-    @Override
-    public void addPropertyChangeListener(PropertyChangeListener listener) {
-        observable.addPropertyChangeListener(listener);
-    }
-
-    @Override
-    public void removePropertyChangeListener(PropertyChangeListener listener) {
-        observable.removePropertyChangeListener(listener);
-    }
 
     public Data getMagic() {
         return this.magic;

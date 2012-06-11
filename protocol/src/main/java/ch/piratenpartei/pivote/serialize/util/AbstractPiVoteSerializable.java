@@ -1,5 +1,6 @@
 package ch.piratenpartei.pivote.serialize.util;
 
+import java.beans.PropertyChangeListener;
 import java.io.IOException;
 
 import ch.piratenpartei.pivote.serialize.DataInput;
@@ -8,11 +9,26 @@ import ch.piratenpartei.pivote.serialize.SerializationContext;
 import ch.piratenpartei.pivote.serialize.SerializationException;
 import ch.piratenpartei.pivote.serialize.Serializer;
 
+import ch.raffael.util.beans.Observable;
+import ch.raffael.util.beans.ObservableSupport;
+
 
 /**
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
-public abstract class AbstractPiVoteSerializable implements PiVoteSerializable {
+public abstract class AbstractPiVoteSerializable implements PiVoteSerializable, Observable {
+
+    protected final ObservableSupport observable = new ObservableSupport(this);
+
+    @Override
+    public void addPropertyChangeListener(PropertyChangeListener listener) {
+        observable.addPropertyChangeListener(listener);
+    }
+
+    @Override
+    public void removePropertyChangeListener(PropertyChangeListener listener) {
+        observable.removePropertyChangeListener(listener);
+    }
 
     protected Serializer buildSerializer(SerializationContext context) throws SerializationException {
         return new SerializerBuilder(getClass(), context).build();
