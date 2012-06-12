@@ -21,6 +21,7 @@ import com.jidesoft.swing.StyledLabel;
 import com.jidesoft.swing.StyledLabelBuilder;
 
 import ch.raffael.util.i18n.I18N;
+import ch.raffael.util.swing.SwingUtil;
 import ch.raffael.util.swing.actions.ActionGroupBuilder;
 import ch.raffael.util.swing.actions.ActionPresenter;
 import ch.raffael.util.swing.actions.CommonAction;
@@ -70,6 +71,8 @@ public class CertificateManager extends AbstractActivity<JPanel> {
         root.add(scrollPane);
         list.add(buildEntry(true));
         list.add(buildEntry(false));
+        scrollPane.getVerticalScrollBar().setUnitIncrement(SwingUtil.getLineHeight(root, 3));
+        scrollPane.getHorizontalScrollBar().setUnitIncrement(SwingUtil.getMWidth(root, 3));
         return root;
     }
 

@@ -6,11 +6,11 @@ import org.joda.time.LocalDateTime;
 /**
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
-public class DataUtils {
+public class DataIO {
 
     public static final LocalDateTime BASE_DATETIME = new LocalDateTime(1, 1, 1, 0, 0);
 
-    private DataUtils() {
+    private DataIO() {
     }
 
     public static long nano100ToMillis(long nano100) {

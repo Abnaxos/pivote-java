@@ -4,8 +4,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import ch.piratenpartei.pivote.serialize.Serializer;
-
 
 /**
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
@@ -19,7 +17,5 @@ public @interface Field {
     String type();
 
     Security security() default Security.NONE;
-
-    Class<? extends Serializer> custom() default Serializer.class;
 
 }

@@ -17,6 +17,20 @@ public final class Data {
     }
 
     @Override
+    public String toString() {
+        StringBuilder buf = new StringBuilder("Data[").append(data.length).append(":");
+        for ( byte b : data ) {
+            int i = b & 0xff;
+            if ( i < 16 ) {
+                buf.append(0);
+            }
+            buf.append(Integer.toString(i, 16));
+        }
+        buf.append("]");
+        return buf.toString();
+    }
+
+    @Override
     public boolean equals(Object o) {
         if ( this == o ) {
             return true;

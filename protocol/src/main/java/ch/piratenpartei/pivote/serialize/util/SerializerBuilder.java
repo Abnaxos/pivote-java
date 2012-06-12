@@ -71,6 +71,7 @@ public class SerializerBuilder {
             }
             if ( def.reader != null ) {
                 assert def.writer != null;
+                context.log().trace("Found custom read/write methods for property {}", def.name);
                 serializer.append(new CustomSerializer(def.reader, def.writer));
             }
             else if ( def.isList ) {
@@ -123,14 +124,16 @@ public class SerializerBuilder {
         }
     }
 
-    private static List<Definition> collectDefinitions(List<Definition> target, final Class<?> type) throws SerializationException {
+    private List<Definition> collectDefinitions(List<Definition> target, final Class<?> type) throws SerializationException {
         if ( type == Object.class ) {
             return target;
         }
         collectDefinitions(target, type.getSuperclass());
+        context.log().trace("Introspecting {}", type);
         Serialize annotation = type.getAnnotation(Serialize.class);
         if ( annotation != null ) {
             for ( Field f : annotation.value() ) {
+                context.log().trace("Found field: " + f);
                 target.add(new Definition(type, f));
             }
         }
@@ -218,6 +221,7 @@ public class SerializerBuilder {
         }
         @Override
         public void read(Object target, DataInput input) throws IOException {
+            input.getContext().log().trace("Reading using custom method {} on {}", reader, target);
             invoke(target, reader, input);
         }
         private void invoke(Object target, Method method, Object... args) throws IOException {

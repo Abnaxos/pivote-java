@@ -10,21 +10,30 @@ import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
+
+import javax.annotation.Nullable;
 
 import org.slf4j.Logger;
 
 import ch.piratenpartei.pivote.serialize.DataInput;
 import ch.piratenpartei.pivote.serialize.DataOutput;
 import ch.piratenpartei.pivote.serialize.SerializationContext;
+import ch.piratenpartei.pivote.serialize.SerializationException;
+import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Maps;
+import com.google.common.net.HostAndPort;
 import com.google.common.util.concurrent.ForwardingListenableFuture;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
 import com.google.common.util.concurrent.Uninterruptibles;
 
+import ch.raffael.util.common.logging.EnhancedLogger;
 import ch.raffael.util.common.logging.LogUtil;
 
 
@@ -34,13 +43,13 @@ import ch.raffael.util.common.logging.LogUtil;
 public class Connection {
 
     @SuppressWarnings("UnusedDeclaration")
-    private static final Logger log = LogUtil.getLogger();
+    private final Logger log;
 
     private final SerializationContext serializationContext;
-    private final String host;
-    private final int port;
-    private boolean connected;
-    private final Map<UUID, ResponseFuture> requestMap = Maps.newConcurrentMap();
+    private final HostAndPort piVoteServer;
+    private long requestTimeout = TimeUnit.MILLISECONDS.convert(30, TimeUnit.SECONDS);
+    private Timer requestTimer;
+    private final Map<UUID, ResponseFuture> requestMap = new ConcurrentHashMap<UUID, ResponseFuture>();
     private LinkedBlockingQueue<RpcRequest> requestQueue = new LinkedBlockingQueue<RpcRequest>();
     private Socket socket;
     private BufferedInputStream socketInputStream;
@@ -51,32 +60,38 @@ public class Connection {
 
     private volatile boolean disconnect = false;
 
-    public Connection(SerializationContext serializationContext, String host, int port) {
-        this.serializationContext = serializationContext;
-        this.host = host;
-        this.port = port;
+    public Connection(SerializationContext serializationContext, HostAndPort piVoteServer) {
+        log = new EnhancedLogger(LogUtil.getLogger(), new Function<String, String>() {
+            @Override
+            public String apply(@Nullable String input) {
+                return "Connection:" + Connection.this.piVoteServer + ": " + input;
+            }
+        });
+        this.serializationContext = serializationContext.withLogger(log);
+        this.piVoteServer = piVoteServer;
     }
 
     public synchronized void connect() throws IOException {
         boolean success = false;
         Preconditions.checkState(socket == null, "Already connected");
-        log.info("Connecting to {}:{}", host, port);
-        socket = new Socket(host, port);
+        log.info("Connecting to {}", piVoteServer);
+        socket = new Socket(piVoteServer.getHostText(), piVoteServer.getPort());
         try {
             socketInputStream = new BufferedInputStream(socket.getInputStream());
             socketOutputStream = new BufferedOutputStream(socket.getOutputStream());
+            requestTimer = new Timer("Connection:" + piVoteServer + ":timer");
             inputThread = new Thread(new Runnable() {
                 @Override
                 public void run() {
                     reader();
                 }
-            }, "Connection:" + host + ":" + port + ":reader");
+            }, "Connection:" + piVoteServer + ":reader");
             outputThread = new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    reader();
+                    writer();
                 }
-            }, "Connection:" + host + ":" + port + ":output");
+            }, "Connection:" + piVoteServer + ":output");
             inputThread.start();
             outputThread.start();
             success = true;
@@ -84,12 +99,12 @@ public class Connection {
         finally {
             if ( !success ) {
                 disconnect = true;
-                log.debug("Attempting to close failed connection to {}:{}", host, port);
+                log.debug("Attempting to close failed connection to {}", piVoteServer);
                 try {
                     socket.close();
                 }
                 catch ( Exception e ) {
-                    log.error("Error closing connection to {}:{}", host, port);
+                    log.error("Error closing connection to {}", piVoteServer);
                 }
             }
         }
@@ -98,11 +113,11 @@ public class Connection {
     public void disconnect() {
         synchronized ( this ) {
             if ( disconnect || socket == null ) {
-                log.debug("Not connected to {}:{}", host, port);
+                log.debug("Not connected to {}", piVoteServer);
                 disconnect = true;
                 return;
             }
-            log.info("Disconnecting from {}:{}", host, port);
+            log.info("Disconnecting from {}", piVoteServer);
             disconnect = true;
         }
         boolean interrupted = false;
@@ -122,12 +137,13 @@ public class Connection {
         inputThread.interrupt();
         Uninterruptibles.joinUninterruptibly(outputThread);
         Uninterruptibles.joinUninterruptibly(inputThread); // will exit on empty response map
+        requestTimer.cancel();
         // close the socket
         try {
             socket.close();
         }
         catch ( Exception e ) {
-            log.error("Error closing socket to " + host + ":" + port, e);
+            log.error("Error closing socket to " + piVoteServer, e);
         }
         // re-interrupt if we've been interrupted while disconnecting
         if ( interrupted ) {
@@ -137,8 +153,8 @@ public class Connection {
 
     public synchronized ListenableFuture<RpcResponse> sendRequest(RpcRequest request) {
         Preconditions.checkState(socket != null && !disconnect, "Not connected");
-        request.setRequestId(UUID.randomUUID());
-        ResponseFuture result = new ResponseFuture();
+        log.debug("Enqueueing request: {}; current queue size: {}", request, requestQueue.size());
+        ResponseFuture result = new ResponseFuture(request.getRequestId());
         requestMap.put(request.getRequestId(), result);
         requestQueue.offer(request);
         return result;
@@ -167,10 +183,12 @@ public class Connection {
             try {
                 UUID requestId = UUID.randomUUID();
                 request.setRequestId(requestId);
+                log.trace("Preparing request: {}", request);
                 ByteArrayOutputStream requestData = new ByteArrayOutputStream();
                 request.write(new DataOutput(requestData, serializationContext));
                 sizeBuffer.reset();
                 sizeBuffer.putInt(requestData.size());
+                log.debug("Sending request: {} ({} bytes)", request, requestData.size());
                 requestData.writeTo(socketOutputStream);
                 socketOutputStream.flush();
             }
@@ -196,30 +214,34 @@ public class Connection {
                     disconnect();
                     return;
                 }
-                byte[] buf = new byte[sizeBuffer.getInt()];
+                int size = sizeBuffer.getInt();
+                if ( log.isDebugEnabled() ) {
+                    log.debug("Retrieving message ({} bytes)", size);
+                }
+                byte[] buf = new byte[size];
                 read(buf);
                 DataInput data = new DataInput(new ByteArrayInputStream(buf), serializationContext);
                 Object object = data.readObject();
                 if ( !(object instanceof RpcResponse) ) {
                     log.error("Invalid response : {}", object);
-                    disconnect();
-                    requestMap.clear();
                 }
                 else {
                     RpcResponse response = (RpcResponse)object;
                     ResponseFuture retval = requestMap.remove(response.getRequestId());
                     if ( retval == null ) {
                         log.error("Umatched response ({}): {}", response.getRequestId(), response);
-                        disconnect();
-                        requestMap.clear();
                     }
                     else {
+                        log.debug("Received response: {}", response);
                         retval.received(response);
                     }
                 }
             }
+            catch ( SerializationException e ) {
+                log.error("Error unmarshalling data", e);
+            }
             catch ( IOException e ) {
-                log.error("Error reading data from server " + host + ":" + port, e);
+                log.error("Error reading data", e);
                 disconnect();
                 requestMap.clear();
             }
@@ -244,12 +266,24 @@ public class Connection {
         return true;
     }
 
-    private final static class ResponseFuture extends ForwardingListenableFuture.SimpleForwardingListenableFuture<RpcResponse> {
-        private ResponseFuture() {
+    private final class ResponseFuture extends ForwardingListenableFuture.SimpleForwardingListenableFuture<RpcResponse> {
+        private final UUID requestId;
+        private final TimerTask timeout = new TimerTask() {
+            @Override
+            public void run() {
+                requestMap.remove(requestId);
+                log.debug("Request timeout");
+                ((SettableFuture)delegate()).setException(new RpcTimeoutException("Request " + requestId + " timed out"));
+            }
+        };
+        private ResponseFuture(UUID requestId) {
             super(SettableFuture.<RpcResponse>create());
+            this.requestId = requestId;
+            requestTimer.schedule(timeout, requestTimeout);
         }
         @SuppressWarnings({ "unchecked", "ThrowableResultOfMethodCallIgnored" })
         private void received(RpcResponse response) {
+            timeout.cancel();
             if ( response.getException() != null ) {
                 ((SettableFuture)delegate()).setException(response.getException());
             }
@@ -257,7 +291,6 @@ public class Connection {
                 ((SettableFuture)delegate()).set(response);
             }
         }
-
     }
 
 }

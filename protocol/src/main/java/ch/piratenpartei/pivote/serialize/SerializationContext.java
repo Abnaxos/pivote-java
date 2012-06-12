@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
@@ -13,6 +12,7 @@ import org.slf4j.Logger;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
+import com.google.common.collect.Maps;
 import com.google.common.io.Closeables;
 
 import ch.raffael.util.common.Classes;
@@ -27,18 +27,27 @@ public class SerializationContext {
     private final ClassLoader classLoader;
 
     @SuppressWarnings("UnusedDeclaration")
-    private static final Logger log = LogUtil.getLogger();
+    private final Logger log;
 
-    private final BiMap<String, Class<? extends PiVoteSerializable>> mappings = HashBiMap.create();
-    private final Map<Class<? extends PiVoteSerializable>, Serializer> serializers = new HashMap<Class<? extends PiVoteSerializable>, Serializer>();
+    private final BiMap<String, Class<? extends PiVoteSerializable>> mappings;
+    private final Map<Class<? extends PiVoteSerializable>, Serializer> serializers;
 
     public SerializationContext() throws ClassNotFoundException {
         this(null);
     }
 
     public SerializationContext(ClassLoader classLoader) throws ClassNotFoundException {
-        this.classLoader = Classes.classLoader(classLoader, getClass());
+        this(Classes.classLoader(classLoader, SerializationContext.class), LogUtil.getLogger(),
+             HashBiMap.<String, Class<? extends PiVoteSerializable>>create(),
+             Maps.<Class<? extends PiVoteSerializable>, Serializer>newHashMap());
         loadMappings();
+    }
+
+    private SerializationContext(ClassLoader classLoader, Logger log, BiMap<String, Class<? extends PiVoteSerializable>> mappings, Map<Class<? extends PiVoteSerializable>, Serializer> serializers) {
+        this.classLoader = classLoader;
+        this.log = log;
+        this.mappings = mappings;
+        this.serializers = serializers;
     }
 
     protected synchronized void loadMappings() throws ClassNotFoundException {
@@ -81,6 +90,14 @@ public class SerializationContext {
         catch ( IOException e ) {
             log.error("Cannot load class mappings", e);
         }
+    }
+
+    public SerializationContext withLogger(Logger logger) {
+        return new SerializationContext(classLoader, logger, mappings, serializers);
+    }
+
+    public Logger log() {
+        return log;
     }
 
     @SuppressWarnings("unchecked")

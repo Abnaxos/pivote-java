@@ -4,16 +4,15 @@ import java.awt.Component;
 import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.logging.LogManager;
 import java.util.prefs.Preferences;
 
-import javax.jnlp.BasicService;
-import javax.jnlp.ServiceManager;
-import javax.jnlp.UnavailableServiceException;
 import javax.swing.BorderFactory;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 
 import org.slf4j.Logger;
+import org.slf4j.bridge.SLF4JBridgeHandler;
 
 import ch.piratenpartei.pivote.ui.AppPanel;
 import com.jidesoft.dialog.JideOptionPane;
@@ -40,10 +39,22 @@ public final class PiVote {
 
     private final Preferences prefs = Preferences.userNodeForPackage(PiVote.class);
 
-    private File storageDirectory = new File(System.getProperty("user.home"), ".piress");
+    private File storageDirectory;
     private boolean developmentMode = Boolean.getBoolean("ch.piratenpartei.pivote.development");
 
     private PiVote() {
+        storageDirectory = new File(System.getProperty("ch.piratenpartei.pivote.storageDir", defaultStorageDir()));
+    }
+
+    private static String defaultStorageDir() {
+        if ( OS.isWindows() ) {
+            return System.getProperty("user.home") + File.separator + "PiVote";
+        }
+        else {
+            // we're assuming UNIX
+            return System.getProperty("user.home") + File.separator + ".config" + File.separator + "PiVote";
+            // FIXME: there are some env variables telling where ~/.config is; use them
+        }
     }
 
     public File getStorageDirectory() {
@@ -55,14 +66,13 @@ public final class PiVote {
     }
 
     private void start() {
-        try {
-            BasicService basic = (BasicService)ServiceManager.lookup(BasicService.class.getName());
-            System.out.println(basic.getCodeBase());
-        }
-        catch ( UnavailableServiceException e ) {
-// FIXME: Handle exception
-            e.printStackTrace();
-        }
+        //try {
+        //    BasicService basic = (BasicService)ServiceManager.lookup(BasicService.class.getName());
+        //    System.out.println(basic.getCodeBase());
+        //}
+        //catch ( UnavailableServiceException e ) {
+        //    log.info("Not running in JNLP mode", e);
+        //}
         SwingUtil.setupMetalLookAndFeel();
         //I18N.setLenient(true);
         if ( !storageDirectory.isDirectory() ) {
@@ -92,6 +102,7 @@ public final class PiVote {
                 }
             }
         });
+
         JFrame mainFrame = new JFrame(res.appName());
         rootContext.attach(mainFrame);
         AppPanel appPanel = new AppPanel();
@@ -106,6 +117,8 @@ public final class PiVote {
     }
 
     public static void main(String[] args) throws Exception {
+        LogManager.getLogManager().reset();
+        SLF4JBridgeHandler.install();
         new PiVote().start();
     }
 

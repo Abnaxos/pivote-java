@@ -10,7 +10,6 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.UUID;
 
-import ch.piratenpartei.pivote.rpc.RemoteException;
 import ch.piratenpartei.pivote.serialize.types.Data;
 import ch.piratenpartei.pivote.serialize.types.UInt32;
 import com.google.common.base.Charsets;
@@ -40,12 +39,6 @@ public class DataInput implements Closeable {
         return null;
     }
 
-    // FIXME: Multi-language string?
-
-    public RemoteException readException() throws IOException {
-        return null;
-    }
-
     public boolean readBool() throws IOException {
         read(1);
         return buffer.get() != 0;
@@ -61,8 +54,8 @@ public class DataInput implements Closeable {
     }
 
     public LocalDateTime readDateTime() throws IOException {
-        long offset = DataUtils.nano100ToMillis(readInt64());
-        return DataUtils.BASE_DATETIME.plus(new Duration(offset));
+        long offset = DataIO.nano100ToMillis(readInt64());
+        return DataIO.BASE_DATETIME.plus(new Duration(offset));
     }
 
     public double readDouble() throws IOException {
@@ -78,9 +71,9 @@ public class DataInput implements Closeable {
         byte[] bytes = new byte[16];
         read(bytes, 16);
         // for some strange reason, we need to swap some bytes :( ask Exception ...
-        DataUtils.reverseBytes(bytes, 0, 4);
-        DataUtils.reverseBytes(bytes, 4, 2);
-        DataUtils.reverseBytes(bytes, 6, 2);
+        DataIO.reverseBytes(bytes, 0, 4);
+        DataIO.reverseBytes(bytes, 4, 2);
+        DataIO.reverseBytes(bytes, 6, 2);
         ByteBuffer buf = ByteBuffer.wrap(bytes).order(ByteOrder.BIG_ENDIAN);
         return new UUID(buf.getLong(), buf.getLong());
     }
@@ -129,6 +122,7 @@ public class DataInput implements Closeable {
         if ( javaClass == null ) {
             throw new SerializationException("Unknown class: " + protocolClass);
         }
+        context.log().debug("Reading object: {} -> {}", protocolClass, javaClass.getName());
         try {
             target = javaClass.newInstance();
         }
@@ -139,6 +133,7 @@ public class DataInput implements Closeable {
             throw new SerializationException("Cannot create object of class " + javaClass.getName(), e);
         }
         target.read(this);
+        context.log().debug("Finished reading object: {}", target);
         return target;
     }
 

@@ -55,7 +55,9 @@ public class DefaultSerializer implements Serializer {
         }
         @Override
         public void read(Object target, DataInput input) throws IOException {
-            accessor.set(target, handler.read(input));
+            Object value = handler.read(input);
+            input.getContext().log().trace("Read value {} => {}", value, accessor);
+            accessor.set(target, value);
         }
     }
 

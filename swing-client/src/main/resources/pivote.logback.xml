@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<included>
+
+  <!-- synchronize java.util.logging logging levels with logback -->
+  <contextListener class="ch.qos.logback.classic.jul.LevelChangePropagator">
+    <resetJUL>true</resetJUL>
+  </contextListener>
+
+  <!-- logging to the console -->
+  <appender name="stdout" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder>
+      <pattern>${defaultPattern}</pattern>
+    </encoder>
+  </appender>
+
+  <!-- the default log file -->
+  <!--<appender name="default-file" class="ch.qos.logback.core.rolling.RollingFileAppender">-->
+    <!--<file>${logDir}/${logFile}.log</file>-->
+    <!--<append>true</append>-->
+    <!--<encoder>-->
+      <!--<pattern>${defaultPattern}</pattern>-->
+    <!--</encoder>-->
+    <!--<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">-->
+      <!--<fileNamePattern>${logDir}/${logFile}.%d.log</fileNamePattern>-->
+      <!--<maxHistory>14</maxHistory>-->
+    <!--</rollingPolicy>-->
+  <!--</appender>-->
+
+</included>

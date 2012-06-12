@@ -128,6 +128,7 @@ public class Certificate extends AbstractPiVoteSerializable{
         else {
             setPrivateKeyData(null);
         }
+        input.getContext().log().trace("Read privateKeyData: {}", getPrivateKeyData());
     }
 
     private void writePrivateKeyData(DataOutput output) throws IOException {
@@ -149,6 +150,7 @@ public class Certificate extends AbstractPiVoteSerializable{
         else {
             setPrivateKeySalt(null);
         }
+        input.getContext().log().trace("Read privateKeySalt: {}", getPrivateKeySalt());
     }
 
     private void writePrivateKeySalt(DataOutput output) throws IOException {
@@ -170,6 +172,7 @@ public class Certificate extends AbstractPiVoteSerializable{
         else {
             setPassphraseSalt(null);
         }
+        input.getContext().log().trace("Read passphraseSalt: {}", getPassphraseSalt());
     }
 
     private void writePassphraseSalt(DataOutput output) throws IOException {
