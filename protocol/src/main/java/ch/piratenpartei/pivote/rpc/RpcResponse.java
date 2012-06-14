@@ -59,7 +59,7 @@ public class RpcResponse extends RpcMessage {
             int numErrCode = input.readInt32();
             String message = input.readString();
             RemoteException exception = new RemoteException(typeName, ErrorCode.byNumeric(numErrCode), message);
-            input.getContext().log().trace("Read exception: {}", exception);
+            input.context().log().trace("Read exception: {}", exception);
             setException(exception);
         }
         else {

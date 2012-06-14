@@ -24,4 +24,7 @@ import java.io.IOException;
 public interface Serializer {
 
     void read(Object target, DataInput input) throws IOException;
+
+    void write(Object object, DataOutput output) throws IOException;
+
 }

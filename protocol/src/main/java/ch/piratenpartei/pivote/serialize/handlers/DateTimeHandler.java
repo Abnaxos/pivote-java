@@ -17,8 +17,11 @@ package ch.piratenpartei.pivote.serialize.handlers;
 
 import java.io.IOException;
 
+import ch.piratenpartei.pivote.serialize.DataIO;
 import ch.piratenpartei.pivote.serialize.DataInput;
+import ch.piratenpartei.pivote.serialize.DataOutput;
 import ch.piratenpartei.pivote.serialize.Handler;
+import org.joda.time.LocalDateTime;
 
 
 /**
@@ -29,5 +32,10 @@ public class DateTimeHandler implements Handler {
     @Override
     public Object read(DataInput input) throws IOException {
         return input.readDateTime();
+    }
+
+    @Override
+    public void write(DataOutput output, Object value) throws IOException {
+        output.writeDateTime(DataIO.check(LocalDateTime.class, value));
     }
 }

@@ -91,6 +91,7 @@ public class SerializationContext {
                         else {
                             Class<?> clazz = Class.forName(javaName, false, classLoader);
                             mappings.put(protocolName, piVoteSerializable(clazz));
+                            log.trace("Mapping: protocol:{} <=> java:{}", protocolName, javaName);
                         }
                     }
                 }

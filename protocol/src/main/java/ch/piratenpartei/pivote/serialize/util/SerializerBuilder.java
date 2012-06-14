@@ -236,8 +236,13 @@ public class SerializerBuilder {
         }
         @Override
         public void read(Object target, DataInput input) throws IOException {
-            input.getContext().log().trace("Reading using custom method {} on {}", reader, target);
+            input.context().log().trace("Reading using custom method {} on {}", reader, target);
             invoke(target, reader, input);
+        }
+        @Override
+        public void write(Object object, DataOutput output) throws IOException {
+            output.context().log().trace("Writing using custom method {} on {}", writer, object);
+            invoke(object, writer, output);
         }
         private void invoke(Object target, Method method, Object... args) throws IOException {
             boolean reset = method.isAccessible();

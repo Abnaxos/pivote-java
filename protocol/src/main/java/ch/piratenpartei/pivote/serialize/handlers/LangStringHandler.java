@@ -17,7 +17,9 @@ package ch.piratenpartei.pivote.serialize.handlers;
 
 import java.io.IOException;
 
+import ch.piratenpartei.pivote.serialize.DataIO;
 import ch.piratenpartei.pivote.serialize.DataInput;
+import ch.piratenpartei.pivote.serialize.DataOutput;
 import ch.piratenpartei.pivote.serialize.Handler;
 import ch.piratenpartei.pivote.serialize.types.LangString;
 
@@ -27,6 +29,8 @@ import ch.piratenpartei.pivote.serialize.types.LangString;
  */
 public class LangStringHandler implements Handler {
 
+    public static final LangString.Language[] LANGUAGES = LangString.Language.values();
+
     @Override
     public Object read(DataInput input) throws IOException {
         LangString langString = new LangString();
@@ -35,5 +39,24 @@ public class LangStringHandler implements Handler {
             langString.set(input.readEnum(LangString.Language.class), input.readString());
         }
         return langString;
+    }
+
+    @Override
+    public void write(DataOutput output, Object value) throws IOException {
+        LangString langstr = DataIO.check(LangString.class, value);
+        int count = 0;
+        for ( LangString.Language lang : LANGUAGES ) {
+            if ( langstr.get(lang) != null ) {
+                count++;
+            }
+        }
+        output.writeInt32(count);
+        for ( LangString.Language lang : LANGUAGES ) {
+            String str = langstr.get(lang);
+            if ( str != null ) {
+                output.writeEnum(lang);
+                output.writeString(str);
+            }
+        }
     }
 }

@@ -16,8 +16,11 @@
 package ch.piratenpartei.pivote.serialize.handlers;
 
 import java.io.IOException;
+import java.util.List;
 
+import ch.piratenpartei.pivote.serialize.DataIO;
 import ch.piratenpartei.pivote.serialize.DataInput;
+import ch.piratenpartei.pivote.serialize.DataOutput;
 import ch.piratenpartei.pivote.serialize.Handler;
 import com.google.common.collect.ImmutableList;
 
@@ -41,6 +44,15 @@ public class ListHandler implements Handler {
             builder.add(elementHandler.read(input));
         }
         return builder.build();
+    }
+
+    @Override
+    public void write(DataOutput output, Object value) throws IOException {
+        List list = DataIO.check(List.class, value);
+        output.writeInt32(list.size());
+        for ( Object elem : list ) {
+            elementHandler.write(output, elem);
+        }
     }
 
 }

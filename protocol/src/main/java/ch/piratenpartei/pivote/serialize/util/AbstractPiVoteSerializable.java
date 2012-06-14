@@ -27,7 +27,6 @@ import ch.piratenpartei.pivote.serialize.Serializer;
 
 import ch.raffael.util.beans.Observable;
 import ch.raffael.util.beans.ObservableSupport;
-import ch.raffael.util.common.NotImplementedException;
 
 
 /**
@@ -62,11 +61,11 @@ public abstract class AbstractPiVoteSerializable implements PiVoteSerializable, 
 
     @Override
     public void read(DataInput input) throws IOException {
-        handler(input.getContext()).read(this, input);
+        handler(input.context()).read(this, input);
     }
 
     @Override
     public void write(DataOutput output) throws IOException {
-        throw new NotImplementedException();
+        handler(output.context()).write(this, output);
     }
 }

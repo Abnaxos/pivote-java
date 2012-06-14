@@ -31,6 +31,8 @@ import com.google.common.base.Charsets;
 import org.joda.time.Duration;
 import org.joda.time.LocalDateTime;
 
+import ch.raffael.util.common.NotImplementedException;
+
 
 /**
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
@@ -50,8 +52,7 @@ public class DataInput implements Closeable {
     }
 
     public BigInteger readBigint() throws IOException {
-        // FIXME: implement this
-        return null;
+        throw new NotImplementedException();
     }
 
     public boolean readBool() throws IOException {
@@ -117,7 +118,7 @@ public class DataInput implements Closeable {
         int length = readByte() & 0xff;
         byte[] buf = new byte[length];
         read(buf, length);
-        return new String(buf, Charsets.US_ASCII);
+        return new String(buf, Charsets.UTF_8);
     }
 
     public UInt32 readUInt32() throws IOException {
@@ -186,7 +187,7 @@ public class DataInput implements Closeable {
         inputStream.close();
     }
 
-    public SerializationContext getContext() {
+    public SerializationContext context() {
         return context;
     }
 

@@ -16,8 +16,11 @@
 package ch.piratenpartei.pivote.serialize.handlers;
 
 import java.io.IOException;
+import java.util.Map;
 
+import ch.piratenpartei.pivote.serialize.DataIO;
 import ch.piratenpartei.pivote.serialize.DataInput;
+import ch.piratenpartei.pivote.serialize.DataOutput;
 import ch.piratenpartei.pivote.serialize.Handler;
 import com.google.common.collect.ImmutableMap;
 
@@ -45,4 +48,13 @@ public class MapHandler implements Handler {
         return builder.build();
     }
 
+    @Override
+    public void write(DataOutput output, Object value) throws IOException {
+        Map<?, ?> map = DataIO.check(Map.class, value);
+        output.writeInt32(map.size());
+        for ( Map.Entry<?, ?> entry : map.entrySet() ) {
+            keyHandler.write(output, entry.getKey());
+            valueHandler.write(output, entry.getValue());
+        }
+    }
 }

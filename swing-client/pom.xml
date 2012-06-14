@@ -69,7 +69,6 @@
     <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
-      <version>1.0.5</version>
     </dependency>
     <!-- uncomment as needed -->
     <!--<dependency>-->

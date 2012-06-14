@@ -24,6 +24,7 @@ import org.joda.time.LocalDateTime;
 public class DataIO {
 
     public static final LocalDateTime BASE_DATETIME = new LocalDateTime(1, 1, 1, 0, 0);
+    public static final long DAY_MILLIS = 24 * 60 * 60 * 1000;
 
     private DataIO() {
     }
@@ -43,4 +44,16 @@ public class DataIO {
             bytes[i + offset + count - i * 2 - 1] = b;
         }
     }
+
+    @SuppressWarnings("unchecked")
+    public static <T> T check(Class<T> type, Object value) throws SerializationException {
+        if ( value == null ) {
+            throw new SerializationException("Illegal value: null");
+        }
+        else if ( !type.isInstance(value) ) {
+            throw new SerializationException("Incompatible type, expected " + type.getName() + " but got " + value.getClass().getName());
+        }
+        return (T)value;
+    }
+
 }

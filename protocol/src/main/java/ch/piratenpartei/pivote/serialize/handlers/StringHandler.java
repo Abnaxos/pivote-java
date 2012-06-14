@@ -17,7 +17,9 @@ package ch.piratenpartei.pivote.serialize.handlers;
 
 import java.io.IOException;
 
+import ch.piratenpartei.pivote.serialize.DataIO;
 import ch.piratenpartei.pivote.serialize.DataInput;
+import ch.piratenpartei.pivote.serialize.DataOutput;
 import ch.piratenpartei.pivote.serialize.Handler;
 
 
@@ -29,5 +31,10 @@ public class StringHandler implements Handler {
     @Override
     public Object read(DataInput input) throws IOException {
         return input.readString();
+    }
+
+    @Override
+    public void write(DataOutput output, Object value) throws IOException {
+        output.writeString(DataIO.check(String.class, value));
     }
 }

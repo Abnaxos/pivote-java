@@ -22,6 +22,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import ch.piratenpartei.pivote.serialize.DataInput;
+import ch.piratenpartei.pivote.serialize.DataOutput;
 import ch.piratenpartei.pivote.serialize.Handler;
 import ch.piratenpartei.pivote.serialize.SerializationException;
 import ch.piratenpartei.pivote.serialize.Serializer;
@@ -41,6 +42,13 @@ public class DefaultSerializer implements Serializer {
     public void read(Object target, DataInput input) throws IOException {
         for ( Serializer field : fields ) {
             field.read(target, input);
+        }
+    }
+
+    @Override
+    public void write(Object object, DataOutput output) throws IOException {
+        for ( Serializer field : fields ) {
+            field.write(object, output);
         }
     }
 
@@ -71,8 +79,14 @@ public class DefaultSerializer implements Serializer {
         @Override
         public void read(Object target, DataInput input) throws IOException {
             Object value = handler.read(input);
-            input.getContext().log().trace("Read value {} => {}", value, accessor);
+            input.context().log().trace("Read value {} => {}", value, accessor);
             accessor.set(target, value);
+        }
+        @Override
+        public void write(Object object, DataOutput output) throws IOException {
+            Object value = accessor.get(object);
+            output.context().log().trace("Writing value {} from field {}", value, accessor);
+            handler.write(output, value);
         }
     }
 

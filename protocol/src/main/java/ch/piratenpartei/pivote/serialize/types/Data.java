@@ -63,6 +63,10 @@ public final class Data {
         return Arrays.hashCode(data);
     }
 
+    public int size() {
+        return data.length;
+    }
+
     @NotNull
     public byte[] get() {
         return Arrays.copyOf(data, data.length);
