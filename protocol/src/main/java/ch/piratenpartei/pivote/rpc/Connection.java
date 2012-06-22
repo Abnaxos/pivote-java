@@ -169,6 +169,7 @@ public class Connection {
     public synchronized ListenableFuture<RpcResponse> sendRequest(RpcRequest request) {
         Preconditions.checkState(socket != null && !disconnect, "Not connected");
         log.debug("Enqueueing request: {}; current queue size: {}", request, requestQueue.size());
+        request.setRequestId(UUID.randomUUID());
         ResponseFuture result = new ResponseFuture(request.getRequestId());
         requestMap.put(request.getRequestId(), result);
         requestQueue.offer(request);
@@ -196,12 +197,10 @@ public class Connection {
                 }
             }
             try {
-                UUID requestId = UUID.randomUUID();
-                request.setRequestId(requestId);
                 log.trace("Preparing request: {}", request);
                 ByteArrayOutputStream requestData = new ByteArrayOutputStream();
                 request.write(new DataOutput(requestData, serializationContext));
-                sizeBuffer.reset();
+                sizeBuffer.rewind();
                 sizeBuffer.putInt(requestData.size());
                 log.debug("Sending request: {} ({} bytes)", request, requestData.size());
                 requestData.writeTo(socketOutputStream);
@@ -223,7 +222,7 @@ public class Connection {
                 return;
             }
             try {
-                sizeBuffer.reset();
+                sizeBuffer.rewind();
                 if ( !read(sizeBuffer.array()) ) {
                     log.info("Server disconnected");
                     disconnect();

@@ -18,10 +18,15 @@
 
 <configuration debug="false">
 
+  <!-- synchronize java.util.logging logging levels with logback -->
+  <contextListener class="ch.qos.logback.classic.jul.LevelChangePropagator">
+    <resetJUL>true</resetJUL>
+  </contextListener>
+
   <!-- logging to the console -->
   <appender name="stdout" class="ch.qos.logback.core.ConsoleAppender">
     <encoder>
-      <pattern>%relative %-5level %c{0} %msg%n</pattern>
+      <pattern>%relative %-5level %logger [%thread] %marker%n%msg%n</pattern>
     </encoder>
   </appender>
 

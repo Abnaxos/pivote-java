@@ -1,8 +1,3 @@
-package ch.piratenpartei.pivote.test
-
-import ch.qos.logback.classic.Level
-import org.slf4j.LoggerFactory
-
 /*
 * Copyright 2012 Piratenpartei Schweiz
 *
@@ -19,12 +14,22 @@ import org.slf4j.LoggerFactory
 * limitations under the License.
 */
 
+package ch.piratenpartei.pivote.test
+
+import ch.qos.logback.classic.Level
+import org.slf4j.LoggerFactory
+import org.slf4j.bridge.SLF4JBridgeHandler
+
+import java.util.logging.LogManager
+
 /**
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
 class PiTest {
 
     static void main(String... args) {
+        LogManager.getLogManager().reset();
+        SLF4JBridgeHandler.install();
         int argOffset = 0
         String test = null
         for ( String arg in args ) {

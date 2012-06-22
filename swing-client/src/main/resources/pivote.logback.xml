@@ -43,4 +43,8 @@
     <!--</rollingPolicy>-->
   <!--</appender>-->
 
+  <root level="debug">
+    <appender-ref ref="stdout"/>
+  </root>
+
 </included>
