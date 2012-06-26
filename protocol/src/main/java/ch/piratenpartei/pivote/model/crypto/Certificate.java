@@ -111,6 +111,17 @@ public class Certificate extends AbstractPiVoteSerializable{
         observable.firePropertyChange("attributes", this.attributes, this.attributes = attributes);
     }
 
+    public Object getAttributeValue(CertificateAttribute.Name name) {
+        if ( attributes != null ) {
+            for ( CertificateAttribute attr : attributes ) {
+                if ( attr.getName() == name ) {
+                    return attr.getValue();
+                }
+            }
+        }
+        return null;
+    }
+
     public List<Signature> getSignatures() {
         return this.signatures;
     }

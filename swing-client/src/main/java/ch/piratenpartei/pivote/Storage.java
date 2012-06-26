@@ -15,30 +15,18 @@
  */
 package ch.piratenpartei.pivote;
 
+import java.util.Map;
+import java.util.UUID;
+
+import ch.piratenpartei.pivote.model.crypto.Certificate;
+
+
 /**
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
-public enum OS {
+public interface Storage {
 
-    WINDOWS, MAC, UNIX,;
+    Map<UUID, Certificate> getCertificates();
 
-    private static final OS current;
-    static {
-        String os = System.getProperty("os.name").toLowerCase();
-        if ( os.startsWith("windows") ) {
-            current = WINDOWS;
-        }
-        else if ( os.startsWith("mac os x") ) {
-            current = MAC;
-        }
-        else {
-            // for now, we're simply assuming UNIX
-            current = UNIX;
-        }
-    }
-
-    public static OS current() {
-        return current;
-    }
-
+    void putCertificate(Certificate certificate);
 }

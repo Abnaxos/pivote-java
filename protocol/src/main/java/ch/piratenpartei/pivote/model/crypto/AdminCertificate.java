@@ -13,32 +13,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ch.piratenpartei.pivote;
+package ch.piratenpartei.pivote.model.crypto;
+
+import ch.piratenpartei.pivote.serialize.util.Field;
+import ch.piratenpartei.pivote.serialize.util.Serialize;
+
 
 /**
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
-public enum OS {
+@Serialize(
+    @Field(name = "fullName", type = "string")
+)
+public class AdminCertificate extends Certificate {
 
-    WINDOWS, MAC, UNIX,;
+    private String fullName;
 
-    private static final OS current;
-    static {
-        String os = System.getProperty("os.name").toLowerCase();
-        if ( os.startsWith("windows") ) {
-            current = WINDOWS;
-        }
-        else if ( os.startsWith("mac os x") ) {
-            current = MAC;
-        }
-        else {
-            // for now, we're simply assuming UNIX
-            current = UNIX;
-        }
+    public String getFullName() {
+        return this.fullName;
     }
 
-    public static OS current() {
-        return current;
+    public void setFullName(String fullName) {
+        observable.firePropertyChange("fullName", this.fullName, this.fullName = fullName);
     }
+
 
 }

@@ -16,7 +16,6 @@
 package ch.piratenpartei.pivote;
 
 import java.awt.Component;
-import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.logging.LogManager;
@@ -29,6 +28,7 @@ import javax.swing.JOptionPane;
 import org.slf4j.Logger;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 
+import ch.piratenpartei.pivote.serialize.SerializationContext;
 import ch.piratenpartei.pivote.ui.AppPanel;
 import com.jidesoft.dialog.JideOptionPane;
 import org.jetbrains.annotations.NotNull;
@@ -54,33 +54,16 @@ public final class PiVote {
 
     private final Preferences prefs = Preferences.userNodeForPackage(PiVote.class);
 
-    private File storageDirectory;
     private boolean developmentMode = Boolean.getBoolean("ch.piratenpartei.pivote.development");
 
     private PiVote() {
-        storageDirectory = new File(System.getProperty("ch.piratenpartei.pivote.storageDir", defaultStorageDir()));
-    }
-
-    private static String defaultStorageDir() {
-        if ( OS.isWindows() ) {
-            return System.getProperty("user.home") + File.separator + "PiVote";
-        }
-        else {
-            // we're assuming UNIX
-            return System.getProperty("user.home") + File.separator + ".config" + File.separator + "PiVote";
-            // FIXME: there are some env variables telling where ~/.config is; use them
-        }
-    }
-
-    public File getStorageDirectory() {
-        return storageDirectory;
     }
 
     public boolean isDevelopmentMode() {
         return developmentMode;
     }
 
-    private void start() {
+    private void start() throws Exception {
         //try {
         //    BasicService basic = (BasicService)ServiceManager.lookup(BasicService.class.getName());
         //    System.out.println(basic.getCodeBase());
@@ -90,14 +73,10 @@ public final class PiVote {
         //}
         SwingUtil.setupMetalLookAndFeel();
         //I18N.setLenient(true);
-        if ( !storageDirectory.isDirectory() ) {
-            log.info("Creating storage directory: {}", storageDirectory);
-            if ( !storageDirectory.mkdirs() ) {
-                log.error("Could not create storage directory: {}", storageDirectory);
-            }
-        }
         Context rootContext = ContextManager.getInstance().getRoot();
         rootContext.put(PiVote.class, this);
+        rootContext.put(SerializationContext.class, new SerializationContext());
+        rootContext.put(Storage.class, FileSystemStorage.newInstance(rootContext.get(SerializationContext.class)));
         rootContext.put(ErrorDisplayer.class, new AbstractErrorDisplayer() {
             @Override
             public void displayError(@NotNull Component component, String message, Throwable exception, Object details) {
