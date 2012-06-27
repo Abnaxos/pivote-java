@@ -34,6 +34,10 @@ public class BooleanCertificateAttribute extends CertificateAttribute {
         return (Boolean)super.getValue();
     }
 
+    public void setValue(Boolean value) {
+        super.setValue(value);
+    }
+
     @Override
     public void setValue(Object value) {
         checkArgument(value == null || value instanceof Boolean, "Boolean value expected");

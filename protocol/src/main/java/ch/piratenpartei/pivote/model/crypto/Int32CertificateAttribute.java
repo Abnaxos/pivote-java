@@ -32,6 +32,10 @@ public class Int32CertificateAttribute extends CertificateAttribute {
         return (Integer)super.getValue();
     }
 
+    public void setValue(Integer value) {
+        super.setValue(value);
+    }
+
     @Override
     public void setValue(Object value) {
         checkArgument(value != null || !(value instanceof Integer), "Integer value expected");
