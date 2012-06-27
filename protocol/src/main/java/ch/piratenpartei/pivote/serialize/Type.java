@@ -46,7 +46,7 @@ public enum Type {
 
     BIGINT(new BigintHandler(), BigInteger.class),
     LANGSTRING(new LangStringHandler(), LangString.class),
-    BOOL(new BoolHandler(), Boolean.class),
+    BOOLEAN(new BoolHandler(), Boolean.class),
     BYTE(new ByteHandler(), Byte.class),
     DATA(new DataHandler(), Data.class),
     DATETIME(new DateTimeHandler(), LocalDateTime.class),

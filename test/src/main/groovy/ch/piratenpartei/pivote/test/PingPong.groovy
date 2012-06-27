@@ -17,7 +17,6 @@
 package ch.piratenpartei.pivote.test
 
 import ch.piratenpartei.pivote.rpc.Connection
-import ch.piratenpartei.pivote.rpc.msg.KeepAliveRequest
 import ch.piratenpartei.pivote.serialize.SerializationContext
 import com.google.common.net.HostAndPort
 import org.slf4j.LoggerFactory
@@ -35,11 +34,12 @@ class PingPong {
         SerializationContext serCtx = new SerializationContext()
         Connection connection = new Connection(serCtx, HostAndPort.fromString(args[0]))
         connection.connect()
-        while ( true ) {
-            def resp = connection.sendRequest(new KeepAliveRequest())
-            log.info("Response: {}", resp.get())
-            sleep(1000)
-        }
+        Runtime.getRuntime().addShutdownHook({
+            connection.disconnect()
+        })
+        println "PRESS ENTER TO DISCONNECT"
+        System.in.newReader().readLine()
+        System.exit(1)
     }
 
 }

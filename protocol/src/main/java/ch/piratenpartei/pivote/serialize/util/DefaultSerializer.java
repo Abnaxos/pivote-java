@@ -27,6 +27,8 @@ import ch.piratenpartei.pivote.serialize.Handler;
 import ch.piratenpartei.pivote.serialize.SerializationException;
 import ch.piratenpartei.pivote.serialize.Serializer;
 
+import static com.google.common.primitives.Primitives.*;
+
 
 /**
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
@@ -125,7 +127,7 @@ public class DefaultSerializer implements Serializer {
 
         @Override
         public void set(Object target, Object value) throws SerializationException {
-            if ( value != null && !descriptor.getPropertyType().isInstance(value) ) {
+            if ( value != null && !wrap(descriptor.getPropertyType()).isInstance(value) ) {
                 throw new SerializationException("Cannot write value " + value + " to property " + descriptor.getName() + ": Incompatible types");
             }
             try {

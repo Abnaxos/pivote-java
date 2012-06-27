@@ -15,18 +15,20 @@
  */
 package ch.piratenpartei.pivote.rpc;
 
-import com.google.common.util.concurrent.SettableFuture;
+import java.util.EventListener;
 
 
 /**
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
-public class RpcRequest extends RpcMessage {
+public interface ConnectionListener extends EventListener {
 
-    private final SettableFuture<RpcResponse> receiver = SettableFuture.create();
+    void sendingData(ConnectionEvent event);
 
-    SettableFuture<RpcResponse> getReceiver() {
-        return receiver;
-    }
+    void sentData(ConnectionEvent event);
+
+    void receivingData(ConnectionEvent event);
+
+    void receivedData(ConnectionEvent event);
 
 }

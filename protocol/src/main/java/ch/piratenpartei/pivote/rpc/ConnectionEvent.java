@@ -15,18 +15,24 @@
  */
 package ch.piratenpartei.pivote.rpc;
 
-import com.google.common.util.concurrent.SettableFuture;
+import org.jetbrains.annotations.NotNull;
+
+import ch.raffael.util.beans.Event;
 
 
 /**
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
  */
-public class RpcRequest extends RpcMessage {
+public class ConnectionEvent extends Event<Connection> {
 
-    private final SettableFuture<RpcResponse> receiver = SettableFuture.create();
+    private final int byteCount;
 
-    SettableFuture<RpcResponse> getReceiver() {
-        return receiver;
+    public ConnectionEvent(@NotNull Connection source, int byteCount) {
+        super(source);
+        this.byteCount = byteCount;
     }
 
+    public int getByteCount() {
+        return byteCount;
+    }
 }
