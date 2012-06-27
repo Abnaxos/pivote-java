@@ -29,6 +29,4 @@
     <appender-ref ref="stdout"/>
   </root>
 
-  <logger name="ch.piratenpartei" level="trace"/>
-
 </configuration>

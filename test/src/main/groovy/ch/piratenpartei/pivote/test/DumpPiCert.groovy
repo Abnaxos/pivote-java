@@ -1,3 +1,4 @@
+package ch.piratenpartei.pivote.test
 /*
  * Copyright 2012 Piratenpartei Schweiz
  *
@@ -22,7 +23,7 @@ class DumpPiCert {
 
     static void main(String... args) {
         if ( args.length > 1 ) {
-            println "USAGE: groovy DumpPiCert.groovy /path/to/file.pi-cert"
+            println "USAGE: groovy DumpPiCert.groovy [/path/to/file.pi-cert]"
             System.exit 1
         }
 
@@ -30,7 +31,6 @@ class DumpPiCert {
         if ( args.length == 0 ) {
             def dir = new File("${System.getProperty("user.home")}/.config/PiVote")
             def picerts = []
-            dir.eachFile {f -> println f}
             dir.eachFileMatch(~/.*\.pi-cert/, { f ->
                 picerts << f
             })
@@ -40,6 +40,9 @@ class DumpPiCert {
             }
             print ">>> "
             filename = picerts[System.in.newReader().readLine() as Integer]
+        }
+        else {
+            filename = args[0]
         }
 
         SerializationContext context = new SerializationContext();
