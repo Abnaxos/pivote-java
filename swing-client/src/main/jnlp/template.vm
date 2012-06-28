@@ -15,6 +15,7 @@
     <resources>
         <j2se version="1.6+"/>
         <property name="ch.piratenpartei.pivote.development" value="true"/>
+        <property name="ch.piratenpartei.pivote.logLevel" value="trace"/>
 
         $dependencies
     </resources>

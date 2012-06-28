@@ -26,4 +26,7 @@
     <appender-ref ref="stdout"/>
   </root>
 
+  <logger name="ch.piratenpartei" level="${ch.piratenpartei.pivote.logLevel:-info}"/>
+  <logger name="ch.raffael" level="${ch.piratenpartei.pivote.logLevel:-info}"/>
+
 </configuration>
