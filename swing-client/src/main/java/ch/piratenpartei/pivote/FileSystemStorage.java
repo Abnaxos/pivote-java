@@ -28,11 +28,10 @@ import org.slf4j.Logger;
 import ch.piratenpartei.pivote.model.crypto.Certificate;
 import ch.piratenpartei.pivote.serialize.DataInput;
 import ch.piratenpartei.pivote.serialize.SerializationContext;
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 
-import ch.raffael.util.common.UnreachableCodeException;
+import ch.raffael.util.common.OS;
 import ch.raffael.util.common.logging.LogUtil;
 
 
@@ -107,35 +106,16 @@ public final class FileSystemStorage implements Storage {
         return newInstance(serializationContext, null);
     }
 
-    public static FileSystemStorage newInstance(SerializationContext serializationContext, String directory) {
+    public static FileSystemStorage newInstance(SerializationContext serializationContext, File directory) {
         if ( directory == null ) {
-            directory = System.getProperty(PROPERTY_STORAGE_DIR);
-            if ( directory == null ) {
-                switch ( OS.current() ) {
-                    case WINDOWS:
-                        // FIXME: %APPDATA%?
-                        directory = Joiner.on(File.separator).join(System.getProperty("user.home"), "PiVote");
-                        break;
-
-                    case MAC:
-                        // FIXME: where is it on Mac?
-                    case UNIX: {
-                        directory = System.getenv("XDG_CONFIG_HOME");
-                        if ( directory == null || directory.isEmpty() ) {
-                            directory = Joiner.on(File.separator).join(System.getProperty("user.home"), ".config", "PiVote");
-                        }
-                        else {
-                            directory = Joiner.on(File.separator).join(directory, "PiVote");
-                        }
-                        break;
-
-                    }
-                    default:
-                        throw new UnreachableCodeException();
-                }
+            if ( System.getProperty(PROPERTY_STORAGE_DIR) != null ) {
+                directory = new File(System.getProperty(PROPERTY_STORAGE_DIR));
+            }
+            else {
+                directory = OS.current().applicationDataDir("PiVote");
             }
         }
-        FileSystemStorage fss = new FileSystemStorage(serializationContext, new File(directory));
+        FileSystemStorage fss = new FileSystemStorage(serializationContext, directory);
         fss.init();
         return fss;
     }

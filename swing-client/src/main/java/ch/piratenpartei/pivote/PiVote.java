@@ -33,6 +33,7 @@ import ch.piratenpartei.pivote.ui.AppPanel;
 import com.jidesoft.dialog.JideOptionPane;
 import org.jetbrains.annotations.NotNull;
 
+import ch.raffael.util.common.OS;
 import ch.raffael.util.common.logging.LogUtil;
 import ch.raffael.util.i18n.I18N;
 import ch.raffael.util.swing.SwingUtil;
@@ -111,6 +112,7 @@ public final class PiVote {
     }
 
     public static void main(String[] args) throws Exception {
+        OS.preferFreedesktop(true);
         LogManager.getLogManager().reset();
         SLF4JBridgeHandler.install();
         new PiVote().start();
