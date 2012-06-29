@@ -25,6 +25,7 @@ import ch.piratenpartei.pivote.serialize.types.Data;
 import ch.piratenpartei.pivote.serialize.util.AbstractPiVoteSerializable;
 import ch.piratenpartei.pivote.serialize.util.Field;
 import ch.piratenpartei.pivote.serialize.util.Serialize;
+import com.google.common.base.Objects;
 import org.joda.time.LocalDateTime;
 
 import ch.raffael.util.common.NotImplementedException;
@@ -61,6 +62,13 @@ public class Certificate extends AbstractPiVoteSerializable{
     private Data privateKeyData;
     private Data privateKeySalt;
     private Data passphraseSalt;
+
+    @Override
+    protected void toString(Objects.ToStringHelper toString) {
+        super.toString(toString);
+        toString.add("id", getId());
+        toString.add("status", getPrivateKeyStatus());
+    }
 
     public Data getMagic() {
         return this.magic;

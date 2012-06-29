@@ -18,7 +18,6 @@ package ch.piratenpartei.pivote;
 import java.awt.Component;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.logging.LogManager;
 import java.util.prefs.Preferences;
 
 import javax.swing.BorderFactory;
@@ -26,8 +25,8 @@ import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 
 import org.slf4j.Logger;
-import org.slf4j.bridge.SLF4JBridgeHandler;
 
+import ch.piratenpartei.pivote.logback.Logback;
 import ch.piratenpartei.pivote.serialize.SerializationContext;
 import ch.piratenpartei.pivote.ui.AppPanel;
 import com.jidesoft.dialog.JideOptionPane;
@@ -112,9 +111,8 @@ public final class PiVote {
     }
 
     public static void main(String[] args) throws Exception {
+        Logback.setup();
         OS.preferFreedesktop(true);
-        LogManager.getLogManager().reset();
-        SLF4JBridgeHandler.install();
         new PiVote().start();
     }
 

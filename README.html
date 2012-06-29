@@ -1,0 +1,151 @@
+<!--
+  ~ Copyright 2012 Piratenpartei Schweiz
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <title>PiVote for Java</title>
+</head>
+<body>
+
+<h1>PiVote for Java</h1>
+
+<h2>1. Introduction</h2>
+
+<p>This is a client for PiVote written in Java. PiVote is a e-voting software
+    developed and used by the Pirate Party of Switzerland.</p>
+
+<p>The main goal of this project is to lower the barrier to participate in
+    votings by:</p>
+
+<ul>
+    <li>Providing an easy-to-use user interface</li>
+    <li>Providing an embedded manual</li>
+    <li>Simplify installation (esp. on Mac OS X) by using Java Webstart</li>
+</ul>
+
+<p>The project is split into two parts: A generic client library and a desktop
+    client application. We might add an Android client at some point.</p>
+
+
+<h2>2. Build &amp; Run</h2>
+
+<p>Use Maven to build PiVote for Java:</p>
+
+<pre>$ cd /path/to/pivote-java
+$ mvn install</pre>
+
+<p>The best way to run is to build an assembly first. After building as
+    described above, do the following:</p>
+
+<pre>$ cd swing-client
+$ mvn install assembly:single</pre>
+
+<p>You'll now find a distribution in
+    <i>target/pivote-swing-client-1.0-SNAPSHOT-dist.zip</i>.
+    Unzip the archive whereever you like and run</p>
+
+<pre>$ java -jar /path/to/pivote-swing-client-1.0-SNAPSHOT.jar</pre>
+
+<p>To build a Webstart distribution:</p>
+
+<pre>$ mvn webstart:jnlp</pre>
+
+<p>A deployable Webstart distribution will be built in
+    <i>target/jnlp</i> and zipped in <i>target/pivote-java-1.0-SNAPSHOT.zip</i>. To run it
+    locally use:</p>
+
+<pre>$ javaws target/jnlp/launch.jnlp</pre>
+
+
+<h3>2.1 System Properties</h3>
+
+<p>The client application recognises some system properties:</p>
+
+<dl>
+    <dt>-Dch.piratenpartei.pivote.logLevel</dt>
+    <dd>Set the log level (<i>trace</i>, <i>debug</i>, <i>info</i>, <i>warn</i>,
+        <i>error</i>, <i>all</i>, <i>off</i>). If not specified, <i>info</i> will be
+        used.
+    </dd>
+
+    <dt>-Dch.piratenpartei.pivote.logStyle</dt>
+    <dd>Set the log style. Two styles are currently available: <i>default</i> and
+        <i>location-info</i>. <i>location-info</i> adds the Filename, method name and line
+        number to the log statements. Note that including this information slows logging
+        down significantly, so don't use it in production. But it it may help to
+        understand how the code works.
+    </dd>
+
+    <dt>-Dch.piratenpartei.pivote.development</dt>
+    <dd>Set development mode to true or false. Defaults to false.</dd>
+
+    <dt>-Dch.piratenpartei.pivote.storageDir</dt>
+    <dd>Override the storage directory.</dd>
+</dl>
+
+
+<h2>3. Tests</h2>
+
+<p>Unit tests will be run by Maven. PiVote for Java relies on the
+    <a href="http://www.spockframework.org/">Spock framework</a> for unit tests. Spock
+    builds upon JUnit, so any IDE that can run JUnit tests should also be able to run
+    Spock
+    tests.</p>
+
+<p>The subproject "test" contains some more small test/demo programs:</p>
+
+<dl>
+    <dt>DumpPiCert</dt>
+    <dd>Read a pi-cert file and dump the data</dd>
+
+    <dt>PingPong</dt>
+    <dd>Connect to a PiVote server and periodically send KeepAliveRequests</dd>
+</dl>
+
+<p>Run these tests:</p>
+
+<pre>$ java -jar pivote-test-1.0-SNAPSHOT.jar [-logLevel] &lt;TestName&gt; &lt;TestArgs&gt;</pre>
+
+<p>See the sources of the tests for test-specific arguments.</p>
+
+
+<h2>4. Developer Notes</h2>
+
+<h3>4.1 Logging</h3>
+
+<p>PiVote for Java uses <a href="http://slf4j.org/">SLF4J</a> for logging. SLF4J is a
+    logging facade that provides backends for Logback, Log4j, java.util.logging and
+    Android logging, and a bridge to Apache commons-logging. Tests and the Swing client
+    use <a href="http://logback.qos.ch/">Logback</a> as backend.</p>
+
+<p>By setting the system property <i>logback.configurationFile</i> you can specify an
+    alternate Logback configuration. See Logback's documentation for details.</p>
+
+<h3>4.2 Groovy</h3>
+
+<p><a href="http://groovy.codehaus.org/">Groovy</a> is used for tests only. Keep it out of
+    <i>pivote-protocol</i>'s runtime classpath, we don't want to bloat it.</p>
+
+<h3>4.3 Joda Time</h3>
+
+<p>As we all know, Java's built-in date/time API is crap. Therefore, PiVote for Java uses
+    <a href="http://joda-time.sf.net/">Joda Time</a> instead. This might change, however,
+    as .NET's date/time API seems to be even worse &hellip; ;)</p>
+
+</body>
+</html>

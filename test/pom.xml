@@ -48,14 +48,11 @@
       <version>${groovy.version}</version>
       <scope>compile</scope>
     </dependency>
+
     <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>jul-to-slf4j</artifactId>
-      <version>${slf4j.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>ch.qos.logback</groupId>
-      <artifactId>logback-classic</artifactId>
+      <groupId>ch.piratenpartei.pivote</groupId>
+      <artifactId>pivote-logback</artifactId>
+      <version>${project.version}</version>
     </dependency>
   </dependencies>
 

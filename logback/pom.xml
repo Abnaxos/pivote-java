@@ -23,7 +23,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>ch.piratenpartei.pivote</groupId>
-  <artifactId>pivote-protocol</artifactId>
+  <artifactId>pivote-logback</artifactId>
   <packaging>jar</packaging>
 
   <name>${project.groupId}:${project.artifactId}</name>
@@ -36,29 +36,48 @@
     <relativePath>../pom.xml</relativePath>
   </parent>
 
+  <properties>
+    <webstart.codebase>http://piraten.raffael.ch/pivote-java</webstart.codebase>
+  </properties>
+
   <dependencies>
     <dependency>
-      <groupId>com.google.guava</groupId>
-      <artifactId>guava</artifactId>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-classic</artifactId>
+    </dependency>
+    <!-- uncomment as needed -->
+    <!--<dependency>-->
+      <!--<groupId>org.slf4j</groupId>-->
+      <!--<artifactId>jcl-over-slf4j</artifactId>-->
+      <!--<version>${slf4j.version}</version>-->
+      <!--<scope>compile</scope>-->
+    <!--</dependency>-->
+    <!--<dependency>-->
+      <!--<groupId>org.slf4j</groupId>-->
+      <!--<artifactId>log4j-over-slf4j</artifactId>-->
+      <!--<version>${slf4j.version}</version>-->
+      <!--<scope>runtime</scope>-->
+    <!--</dependency>-->
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>jul-to-slf4j</artifactId>
+      <version>${slf4j.version}</version>
+      <scope>compile</scope>
     </dependency>
 
-    <dependency>
-      <groupId>ch.raffael.util</groupId>
-      <artifactId>cru-beans</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>joda-time</groupId>
-      <artifactId>joda-time</artifactId>
-      <version>2.1</version>
-    </dependency>
-
-    <dependency>
-      <groupId>ch.piratenpartei.pivote</groupId>
-      <artifactId>pivote-logback</artifactId>
-      <version>${project.version}</version>
-      <scope>test</scope>
-    </dependency>
   </dependencies>
+
+  <build>
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+        <includes>
+          <include>**/*.properties</include>
+          <include>**/*.xml</include>
+        </includes>
+        <filtering>false</filtering>
+      </resource>
+    </resources>
+  </build>
 
 </project>

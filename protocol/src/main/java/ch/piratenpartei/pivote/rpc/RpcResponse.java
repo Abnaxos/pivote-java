@@ -21,6 +21,7 @@ import ch.piratenpartei.pivote.serialize.DataInput;
 import ch.piratenpartei.pivote.serialize.DataOutput;
 import ch.piratenpartei.pivote.serialize.util.Field;
 import ch.piratenpartei.pivote.serialize.util.Serialize;
+import com.google.common.base.Objects;
 
 import ch.raffael.util.common.NotImplementedException;
 
@@ -36,6 +37,17 @@ public class RpcResponse extends RpcMessage {
 
     private boolean success = true;
     private RemoteException exception = null;
+
+    @Override
+    protected void toString(Objects.ToStringHelper toString) {
+        super.toString(toString);
+        if ( success ) {
+            toString.addValue("success");
+        }
+        else {
+            toString.add("exception", exception);
+        }
+    }
 
     public boolean isSuccess() {
         return this.success;

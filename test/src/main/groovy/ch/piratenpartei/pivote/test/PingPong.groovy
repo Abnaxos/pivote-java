@@ -17,6 +17,7 @@
 package ch.piratenpartei.pivote.test
 
 import ch.piratenpartei.pivote.rpc.Connection
+import ch.piratenpartei.pivote.rpc.RpcResponse
 import ch.piratenpartei.pivote.serialize.SerializationContext
 import com.google.common.net.HostAndPort
 import org.slf4j.LoggerFactory
@@ -33,7 +34,8 @@ class PingPong {
         def log = LoggerFactory.getLogger(PingPong)
         SerializationContext serCtx = new SerializationContext()
         Connection connection = new Connection(serCtx, HostAndPort.fromString(args[0]))
-        connection.connect()
+        RpcResponse handshake = connection.connect().get()
+        log.info("Handshake successful: {}", handshake)
         Runtime.getRuntime().addShutdownHook({
             connection.disconnect()
         })

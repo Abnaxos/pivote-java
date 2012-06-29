@@ -32,15 +32,12 @@ import java.util.UUID;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-import javax.annotation.Nullable;
-
 import org.slf4j.Logger;
 
 import ch.piratenpartei.pivote.rpc.msg.KeepAliveRequest;
 import ch.piratenpartei.pivote.serialize.DataInput;
 import ch.piratenpartei.pivote.serialize.DataOutput;
 import ch.piratenpartei.pivote.serialize.SerializationContext;
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.net.HostAndPort;
 import com.google.common.util.concurrent.ForwardingListenableFuture;
@@ -50,7 +47,6 @@ import com.google.common.util.concurrent.Uninterruptibles;
 import ch.raffael.util.beans.EventEmitter;
 import ch.raffael.util.beans.Observable;
 import ch.raffael.util.beans.ObservableSupport;
-import ch.raffael.util.common.logging.EnhancedLogger;
 import ch.raffael.util.common.logging.LogUtil;
 
 
@@ -66,7 +62,7 @@ public class Connection implements Observable {
     public static final int DEFAULT_PORT = 4242;
 
     @SuppressWarnings("UnusedDeclaration")
-    private final Logger log;
+    private final Logger log = LogUtil.getLogger();
 
     private final ObservableSupport observableSupport = new ObservableSupport(this);
     private final EventEmitter<ConnectionListener> connectionEvents = EventEmitter.newEmitter(ConnectionListener.class);
@@ -75,7 +71,7 @@ public class Connection implements Observable {
     private final HostAndPort piVoteServer;
 
     private int readTimeoutMillis = (int)TimeUnit.MILLISECONDS.convert(30, TimeUnit.SECONDS);
-    private int keepAliveFrequenceMillis = (int)TimeUnit.MILLISECONDS.convert(10, TimeUnit.SECONDS);
+    private int keepAliveFrequencyMillis = (int)TimeUnit.MILLISECONDS.convert(10, TimeUnit.SECONDS);
 
     private Socket socket;
     private OutputStream socketOut;
@@ -83,18 +79,18 @@ public class Connection implements Observable {
 
     private LinkedBlockingQueue<RpcRequest> requestQueue = new LinkedBlockingQueue<RpcRequest>();
     private volatile Thread connectionThread;
-    private final Object requestLock = new Object();
+    private final Object interruptLock = new Object();
 
-    private State state = State.CONNECTABLE;
+    private State state = State.DISCONNECTED;
     private final Object stateLock = new Object();
 
     public Connection(SerializationContext serializationContext, HostAndPort piVoteServer) {
-        log = new EnhancedLogger(LogUtil.getLogger(), new Function<String, String>() {
-            @Override
-            public String apply(@Nullable String input) {
-                return "Connection:" + Connection.this.piVoteServer + ": " + input;
-            }
-        });
+        //log = new EnhancedLogger(LogUtil.getLogger(), new Function<String, String>() {
+        //    @Override
+        //    public String apply(@Nullable String input) {
+        //        return "Connection:" + Connection.this.piVoteServer + ": " + input;
+        //    }
+        //});
         this.serializationContext = serializationContext.withLogger(log);
         this.piVoteServer = piVoteServer;
     }
@@ -132,15 +128,15 @@ public class Connection implements Observable {
         observableSupport.firePropertyChange(PROPERTY_READ_TIMEOUT_MILLIS, this.readTimeoutMillis, this.readTimeoutMillis = readTimeoutMillis);
     }
 
-    public synchronized int getKeepAliveFrequenceMillis() {
-        return keepAliveFrequenceMillis;
+    public synchronized int getKeepAliveFrequencyMillis() {
+        return keepAliveFrequencyMillis;
     }
 
-    public synchronized void setKeepAliveFrequenceMillis(int keepAliveFrequence) {
+    public synchronized void setKeepAliveFrequencyMillis(int keepAliveFrequence) {
         if ( socket != null ) {
             return;
         }
-        observableSupport.firePropertyChange(PROPERTY_KEEP_ALIVE_FREQUENCE_MILLIS, this.keepAliveFrequenceMillis, this.keepAliveFrequenceMillis = keepAliveFrequence);
+        observableSupport.firePropertyChange(PROPERTY_KEEP_ALIVE_FREQUENCE_MILLIS, this.keepAliveFrequencyMillis, this.keepAliveFrequencyMillis = keepAliveFrequence);
     }
 
     private void setState(State state) {
@@ -155,8 +151,8 @@ public class Connection implements Observable {
         }
     }
 
-    public synchronized void connect() throws IOException {
-        Preconditions.checkState(getState() == State.CONNECTABLE, "Already connected");
+    public synchronized ListenableFuture<RpcResponse> connect() throws IOException {
+        Preconditions.checkState(getState() == State.DISCONNECTED, "Already connected");
         setState(State.CONNECTING);
         log.info("Connecting to {}", piVoteServer);
         socket = new Socket(piVoteServer.getHostText(), piVoteServer.getPortOrDefault(DEFAULT_PORT));
@@ -181,6 +177,11 @@ public class Connection implements Observable {
             }
         }, "Connection to " + piVoteServer);
         connectionThread.start();
+        RpcRequest handshake = new KeepAliveRequest();
+        handshake.setRequestId(UUID.randomUUID());
+        log.debug("Enqueueing handshake request: {}", handshake);
+        requestQueue.offer(handshake);
+        return wrap(handshake.getReceiver());
     }
 
     public synchronized void disconnect() {
@@ -189,7 +190,7 @@ public class Connection implements Observable {
                 setState(State.DISCONNECTING);
             }
         }
-        synchronized ( requestLock ) {
+        synchronized ( interruptLock ) {
             Thread t = connectionThread;
             if ( t != null ) {
                 t.interrupt();
@@ -207,10 +208,14 @@ public class Connection implements Observable {
             Preconditions.checkState(state == State.CONNECTED || state == State.CONNECTING, "Invalid connection state: %s", state);
         }
         request.setRequestId(UUID.randomUUID());
-        log.debug("Enqueueing request: {} (id={})", request, request.getRequestId());
+        log.debug("Enqueueing request: {}", request);
         requestQueue.offer(request);
         log.trace("Current request queue size: {}", requestQueue.size());
-        return new ForwardingListenableFuture.SimpleForwardingListenableFuture<RpcResponse>(request.getReceiver()) {
+        return wrap(request.getReceiver());
+    }
+
+    private ListenableFuture<RpcResponse> wrap(ListenableFuture<RpcResponse> future) {
+        return new ForwardingListenableFuture.SimpleForwardingListenableFuture<RpcResponse>(future) {
         };
     }
 
@@ -237,27 +242,31 @@ public class Connection implements Observable {
         RpcRequest request = null;
         try {
             ByteBuffer sizeBuffer = ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN);
-            long nextKeepalive = System.currentTimeMillis();
+            long nextKeepAlive = System.currentTimeMillis() + keepAliveFrequencyMillis;
             setState(State.CONNECTED);
+            log.info("Successfully connected to {}", piVoteServer);
             while ( getState() == State.CONNECTED ) {
                 request = null;
                 try {
                     if ( log.isTraceEnabled() ) {
-                        log.trace("Next keep-alive: {}", new Date(nextKeepalive));
+                        log.trace("Next keep-alive: {}", new Date(nextKeepAlive));
                     }
-                    request = requestQueue.poll(nextKeepalive - System.currentTimeMillis(), TimeUnit.MILLISECONDS);
+                    request = requestQueue.poll(nextKeepAlive - System.currentTimeMillis(), TimeUnit.MILLISECONDS);
                 }
                 catch ( InterruptedException e ) {
                     continue;
                 }
-                synchronized ( requestLock ) {
+                synchronized ( interruptLock ) {
+                    if ( Thread.interrupted() ) {
+                        continue;
+                    }
                     if ( request == null ) {
                         request = new KeepAliveRequest();
                         request.setRequestId(UUID.randomUUID());
-                        log.debug("Sending keep-alive ", request.getRequestId());
+                        log.debug("Sending keep-alive: {}", request);
                     }
                     else {
-                        log.debug("Sending request {}: {}", request.getRequestId(), request.getClass().getName());
+                        log.debug("Sending request: {}", request);
                     }
                     ByteArrayOutputStream requestData = new ByteArrayOutputStream();
                     DataOutput dataOut = new DataOutput(requestData, serializationContext);
@@ -265,7 +274,7 @@ public class Connection implements Observable {
                     dataOut.close();
                     ConnectionEvent sendEvent = new ConnectionEvent(this, requestData.size());
                     connectionEvents.emitter().sendingData(sendEvent);
-                    log.trace("Sending request data ({} bytes", requestData.size());
+                    log.trace("Sending request data ({} bytes)", requestData.size());
                     sizeBuffer.rewind();
                     sizeBuffer.putInt(requestData.size());
                     socketOut.write(sizeBuffer.array());
@@ -287,12 +296,12 @@ public class Connection implements Observable {
                     }
                     RpcResponse response = (RpcResponse)object;
                     if ( !request.getRequestId().equals(response.getRequestId()) ) {
-                        throw new RpcException("Invalid request ID on response: " + response.getRequestId() + " (expected " + request.getRequestId() + ")");
+                        throw new RpcException("Mismatched request ID on response: " + response.getRequestId() + " (expected " + request.getRequestId() + ")");
                     }
-                    log.debug("Received RpcResponse {}: {}", response.getRequestId(), response.getClass());
+                    log.debug("Received RpcResponse {}", response);
                     request.getReceiver().set(response);
                 }
-                nextKeepalive = System.currentTimeMillis() + keepAliveFrequenceMillis;
+                nextKeepAlive = System.currentTimeMillis() + keepAliveFrequencyMillis;
             }
         }
         catch ( Throwable e ) {
@@ -304,29 +313,34 @@ public class Connection implements Observable {
         }
         finally {
             try {
-                setState(State.DISCONNECTING);
-                while ( !requestQueue.isEmpty() ) {
-                    log.debug("Cleaning up pending request: {}", request.getRequestId());
-                    requestQueue.poll().getReceiver().setException(new RpcException(piVoteServer + " disconnected"));
-                }
-                connectionThread = null;
-                Thread.interrupted(); // clear interrupted flag
-                log.info("Disconnecting from {}", piVoteServer);
-                try {
-                    socket.close();
-                }
-                catch ( Exception e ) {
-                    log.error("Error closing socket to {}", piVoteServer, e);
+                synchronized ( interruptLock ) {
+                    Thread.interrupted(); // clear interrupted flag if set
+                    log.info("Disconnecting from {}", piVoteServer);
+                    setState(State.DISCONNECTING);
+                    while ( !requestQueue.isEmpty() ) {
+                        log.debug("Cleaning up pending request: {}", request);
+                        requestQueue.poll().getReceiver().setException(new RpcException(piVoteServer + " disconnected"));
+                    }
+                    connectionThread = null;
+                    try {
+                        socket.close();
+                    }
+                    catch ( Exception e ) {
+                        log.error("Error closing socket to {}", piVoteServer, e);
+                    }
                 }
             }
             finally {
+                socket = null;
+                socketIn = null;
+                socketOut = null;
                 setState(State.DISCONNECTED);
             }
         }
     }
 
     public static enum State {
-        CONNECTABLE, CONNECTING, CONNECTED, DISCONNECTING, DISCONNECTED
+        DISCONNECTED, CONNECTING, CONNECTED, DISCONNECTING
     }
 
 }

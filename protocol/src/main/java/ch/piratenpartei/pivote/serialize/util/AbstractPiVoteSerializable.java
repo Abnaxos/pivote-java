@@ -24,6 +24,7 @@ import ch.piratenpartei.pivote.serialize.PiVoteSerializable;
 import ch.piratenpartei.pivote.serialize.SerializationContext;
 import ch.piratenpartei.pivote.serialize.SerializationException;
 import ch.piratenpartei.pivote.serialize.Serializer;
+import com.google.common.base.Objects;
 
 import ch.raffael.util.beans.Observable;
 import ch.raffael.util.beans.ObservableSupport;
@@ -35,6 +36,16 @@ import ch.raffael.util.beans.ObservableSupport;
 public abstract class AbstractPiVoteSerializable implements PiVoteSerializable, Observable {
 
     protected final ObservableSupport observable = new ObservableSupport(this);
+
+    @Override
+    public String toString() {
+        Objects.ToStringHelper toString = Objects.toStringHelper(this);
+        toString(toString);
+        return toString.toString();
+    }
+
+    protected void toString(Objects.ToStringHelper toString) {
+    }
 
     @Override
     public void addPropertyChangeListener(PropertyChangeListener listener) {

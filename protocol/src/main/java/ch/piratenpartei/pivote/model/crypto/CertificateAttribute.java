@@ -18,6 +18,7 @@ package ch.piratenpartei.pivote.model.crypto;
 import ch.piratenpartei.pivote.serialize.util.AbstractPiVoteSerializable;
 import ch.piratenpartei.pivote.serialize.util.Field;
 import ch.piratenpartei.pivote.serialize.util.Serialize;
+import com.google.common.base.Objects;
 
 
 /**
@@ -28,6 +29,12 @@ public abstract class CertificateAttribute extends AbstractPiVoteSerializable {
 
     private Name name;
     private Object value;
+
+    @Override
+    protected void toString(Objects.ToStringHelper toString) {
+        super.toString(toString);
+        toString.add(String.valueOf(getName()), value);
+    }
 
     public Name getName() {
         return this.name;

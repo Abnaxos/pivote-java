@@ -16,11 +16,9 @@
 
 package ch.piratenpartei.pivote.test
 
+import ch.piratenpartei.pivote.logback.Logback
 import ch.qos.logback.classic.Level
 import org.slf4j.LoggerFactory
-import org.slf4j.bridge.SLF4JBridgeHandler
-
-import java.util.logging.LogManager
 
 /**
  * @author <a href="mailto:herzog@raffael.ch">Raffael Herzog</a>
@@ -28,16 +26,20 @@ import java.util.logging.LogManager
 class PiTest {
 
     static void main(String... args) {
-        LogManager.getLogManager().reset();
-        SLF4JBridgeHandler.install();
+        Logback.setup()
         int argOffset = 0
         String test = null
         for ( String arg in args ) {
             argOffset++
             if ( arg.startsWith("-") ) {
-                def level = Level."${arg.substring(1).toUpperCase()}"
-                for ( l in ["ch.piratenpartei"] ) {
-                    LoggerFactory.getLogger(l).setLevel(level)
+                def level = Level.toLevel("${arg.substring(1)}", null)
+                if ( level == null ) {
+                    System.err.println("Unknown log level: ${arg.substring(1)}")
+                }
+                else {
+                    for ( l in ["ch.piratenpartei"] ) {
+                        LoggerFactory.getLogger(l).setLevel(level)
+                    }
                 }
             }
             else {

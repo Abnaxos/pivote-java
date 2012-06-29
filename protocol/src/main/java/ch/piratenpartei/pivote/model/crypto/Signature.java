@@ -21,6 +21,7 @@ import ch.piratenpartei.pivote.serialize.types.Data;
 import ch.piratenpartei.pivote.serialize.util.AbstractPiVoteSerializable;
 import ch.piratenpartei.pivote.serialize.util.Field;
 import ch.piratenpartei.pivote.serialize.util.Serialize;
+import com.google.common.base.Objects;
 import org.joda.time.LocalDateTime;
 
 
@@ -39,6 +40,12 @@ public class Signature extends AbstractPiVoteSerializable {
     private Data signatureData;
     private LocalDateTime validFrom;
     private LocalDateTime validTo;
+
+    @Override
+    protected void toString(Objects.ToStringHelper toString) {
+        super.toString(toString);
+        toString.add("signerId", getSignerId());
+    }
 
     public UUID getSignerId() {
         return this.signerId;

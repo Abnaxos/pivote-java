@@ -18,17 +18,15 @@
 
 <configuration debug="false">
 
-  <!-- logging to the console -->
-  <appender name="stdout" class="ch.qos.logback.core.ConsoleAppender">
-    <encoder>
-      <pattern>%relative %-5level %c{0} %msg%n</pattern>
-    </encoder>
-  </appender>
+  <property resource="pivote.${ch.piratenpartei.pivote.logStyle:-default}.logback.properties"/>
+
+  <include resource="pivote.logback.xml"/>
 
   <root level="info">
     <appender-ref ref="stdout"/>
   </root>
 
-  <logger name="ch.piratenpartei" level="trace"/>
+  <logger name="ch.piratenpartei" level="${ch.piratenpartei.pivote.logLevel:-info}"/>
+  <logger name="ch.raffael" level="${ch.piratenpartei.pivote.logLevel:-info}"/>
 
 </configuration>

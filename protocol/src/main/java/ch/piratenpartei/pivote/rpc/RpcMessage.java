@@ -20,6 +20,7 @@ import java.util.UUID;
 import ch.piratenpartei.pivote.serialize.util.AbstractPiVoteSerializable;
 import ch.piratenpartei.pivote.serialize.util.Field;
 import ch.piratenpartei.pivote.serialize.util.Serialize;
+import com.google.common.base.Objects;
 
 
 /**
@@ -31,6 +32,12 @@ import ch.piratenpartei.pivote.serialize.util.Serialize;
 public class RpcMessage extends AbstractPiVoteSerializable  {
 
     private UUID requestId = null;
+
+    @Override
+    protected void toString(Objects.ToStringHelper toString) {
+        super.toString(toString);
+        toString.add("requestId", requestId);
+    }
 
     public UUID getRequestId() {
         return this.requestId;
